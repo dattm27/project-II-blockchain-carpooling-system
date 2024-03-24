@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carpooling</title>
+</head>
+<body>
+  <h1>Add Ride Contract</h1>
+  
+  <div id="account"></div>
+  <div id="balance"></div>
+  <br>
+  <form id="contractForm" onSubmit="App.createRide(); return false;">
+    <label for="startPoint">Start Point:</label>
+    <input type="text" id="startPoint" name="startPoint" required><br><br>
+    <label for="endPoint">End Point:</label>
+    <input type="text" id="endPoint" name="endPoint" required><br><br>
+    <label for="fare">Fare:</label>
+    <input type="number" id="fare" name="fare" required><br><br>
+    <button type="submit">Add Contract</button>
+  </form>
+  <h1>Ride Contracts</h1>
+  <ul id="rideContracts"></ul>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web3@1.3.6/dist/web3.min.js"></script>
+  <script src="vendor/truffle-contract/dist/truffle-contract.min.js"></script>
+  
+  <script src="app.js"></script>
+</body>
+</html>
