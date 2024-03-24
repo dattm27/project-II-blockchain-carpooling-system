@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: MIT
 //pragma solidity >=0.4.22 <0.9.0;
-pragma solidity 0.8.10;
+pragma solidity ^0.5.0;
 contract RideContract {
     uint public rideCount;
-    address payable  owner;
+    address payable owner ;
     mapping(address => uint256) public clientBalances;
     uint256 public ownerBalance;
 
     struct Ride {
         uint id; 
-        address driver; 
+        address payable driver; 
         string startPoint; //departure
         string endPoint;    //destination
         uint256 fare;
         uint256 startTime;
-        address[] passengers;
+        address payable[] passengers;
         bool isActive;
     }
   
@@ -32,18 +32,19 @@ contract RideContract {
     }
 
     function withdrawEarnings() external onlyOwner {
-        owner.transfer(ownerBalance);
+        
+       owner.transfer(ownerBalance);
         ownerBalance = 0;
     }
 
-    constructor() {
-           // createRide("Start Point", "End Point", 100); // Tạo một chuyến xe mẫu khi khởi tạo
-            rideCount = 0;
-            owner = payable(msg.sender);
+    constructor() public {
+        // createRide("Start Point", "End Point", 100); // Tạo một chuyến xe mẫu khi khởi tạo
+        rideCount = 0;
+        owner = msg.sender;
        
     }
 
-    function createRide(string memory _startPoint, string memory _endPoint, uint256 _fare, uint256 _startTime) external {
+    function createRide(string calldata _startPoint, string calldata _endPoint, uint256 _fare, uint256 _startTime) external {
         require(_fare > 0, "Fare must be greater than zero");
         rideCount++; // Tăng số lượng chuyến xe
 
@@ -79,9 +80,9 @@ contract RideContract {
         uint256 totalFare = ride.fare * (ride.passengers.length + 1);
         uint256 farePerPassenger = totalFare / (ride.passengers.length + 1);
         
-        payable(ride.driver).transfer(farePerPassenger);
+        (ride.driver).transfer(farePerPassenger);
         for (uint256 i = 0; i < ride.passengers.length; i++) {
-            payable(ride.passengers[i]).transfer(farePerPassenger);
+            (ride.passengers[i]).transfer(farePerPassenger);
         }
 
         // Deactivate ride

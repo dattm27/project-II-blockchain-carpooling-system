@@ -13,6 +13,15 @@ App = {
       await App.loadContract();
       await App.render();
       await App.updateBalance();// Cập nhật số dư khi tải ứng dụng
+      // Lấy thời gian hiện tại
+      const now = new Date();
+
+      // Định dạng thời gian hiện tại thành YYYY-MM-DDTHH:MM để có thể sử dụng trong thuộc tính "min" của input
+      const formattedNow = now.toISOString().slice(0, 16);
+
+      // Gán giá trị cho thuộc tính "min" của input
+      document.getElementById("startDateTime").min = formattedNow;
+
     },
   
     loadWeb3: async () => {
@@ -86,7 +95,9 @@ App = {
         // Render danh sách các ride contracts
         for (var i = 1; i <= rideCount; i++) {
             const rideContract = await App.rideContracts.rides(i)  
-            const $rideContract = $('<li>').text(` Start Point: ${rideContract.startPoint}, End Point: ${rideContract.endPoint}, Fare: ${rideContract.fare}`);
+            // Chuyển đổi thời gian bắt đầu từ dạng timestamp sang định dạng ngày giờ
+            const startTime = new Date(rideContract.startTime * 1000).toLocaleString();
+            const $rideContract = $('<li>').text(` Start Point: ${rideContract.startPoint}, End Point: ${rideContract.endPoint}, Fare: ${rideContract.fare}, StartTime: ${startTime}`);
             $rideContractsList.append($rideContract);
         };
     },
@@ -96,7 +107,12 @@ App = {
       const startPoint = $('#startPoint').val();
       const endPoint = $('#endPoint').val();
       const fare = $('#fare').val();
-      await App.rideContracts.createRide(startPoint, endPoint, fare, { from: App.account });
+      // Get the value of the start date and time input field
+      const startDateTimeInput = document.getElementById('startDateTime').value;
+
+      // Convert the start date and time to Unix timestamp
+      const startTime = Math.floor(new Date(startDateTimeInput).getTime() / 1000);
+      await App.rideContracts.createRide(startPoint, endPoint, fare, startTime, { from: App.account });
       window.location.reload();
     },
   
