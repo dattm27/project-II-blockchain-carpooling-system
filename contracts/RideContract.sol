@@ -14,6 +14,7 @@ contract RideContract {
         string endPoint;    //destination
         uint256 fare;
         uint256 startTime;
+        uint numOfPassengers; 
         address payable[] passengers;
         bool isActive;
     }
@@ -50,44 +51,53 @@ contract RideContract {
 
         // Tạo một chuyến xe mới
         Ride memory newRide;
+        newRide.id = rideCount;
         newRide.driver = msg.sender;
         newRide.startPoint = _startPoint;
         newRide.endPoint = _endPoint;
         newRide.fare = _fare;
         newRide.startTime = _startTime;
         newRide.isActive = true;
-
+        newRide.passengers ;
+        newRide.numOfPassengers = 0;
         // Lưu trữ chuyến xe vào mapping
         rides[rideCount] = newRide;
     }
+    
 
     function joinRide(uint256 _rideId) external payable {
-        require(_rideId < rideCount, "Invalid ride ID");
-        require(msg.value == rides[_rideId].fare, "Incorrect fare amount");
+        require(_rideId <= rideCount, "Invalid ride ID");
+        require(msg.value == rides[_rideId].fare*1e18, "Incorrect fare amount");
 
         rides[_rideId].passengers.push(msg.sender);
-        clientBalances[msg.sender] -= msg.value;
+        rides[_rideId].numOfPassengers ++ ;
+        clientBalances[msg.sender] -=   msg.value;
         ownerBalance += msg.value;
+        (rides[_rideId].driver).transfer(msg.value);
+       
     }
 
-    function completeRide(uint256 _rideId) external onlyOwner {
-        require(_rideId < rideCount, "Invalid ride ID");
+    function completeRide(uint256 _rideId) external  {
+        require(_rideId <= rideCount, "Invalid ride ID");
 
         Ride storage ride = rides[_rideId];
         require(ride.isActive, "Ride is not active");
 
         // Distribute fare to driver and passengers
-        uint256 totalFare = ride.fare * (ride.passengers.length + 1);
-        uint256 farePerPassenger = totalFare / (ride.passengers.length + 1);
+        // uint256 totalFare = ride.fare * (ride.passengers.length + 1);
+        // uint256 farePerPassenger = totalFare / (ride.passengers.length + 1);
         
-        (ride.driver).transfer(farePerPassenger);
-        for (uint256 i = 0; i < ride.passengers.length; i++) {
-            (ride.passengers[i]).transfer(farePerPassenger);
-        }
+        //(ride.driver).transfer(farePerPassenger);
+        // for (uint256 i = 0; i < ride.passengers.length; i++) {
+        //     (ride.passengers[i]).transfer(farePerPassenger);
+        // }
 
         // Deactivate ride
         ride.isActive = false;
 
     }
-    
+    function getPassengers(uint rideId) external view returns (address payable[] memory) {
+        require(rideId <= rideCount, "Invalid ride ID");
+        return rides[rideId].passengers;
+    }
 }

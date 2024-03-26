@@ -88,18 +88,66 @@ App = {
         }
       },
     renderRides: async () => {
-        const rideCount = await App.rideContracts.rideCount()
-        const $rideContractsList =  $('#rideContracts');
-        $rideContractsList.empty();
-    
-        // Render danh sách các ride contracts
-        for (var i = 1; i <= rideCount; i++) {
-            const rideContract = await App.rideContracts.rides(i)  
-            // Chuyển đổi thời gian bắt đầu từ dạng timestamp sang định dạng ngày giờ
-            const startTime = new Date(rideContract.startTime * 1000).toLocaleString();
-            const $rideContract = $('<li>').text(` Start Point: ${rideContract.startPoint}, End Point: ${rideContract.endPoint}, Fare: ${rideContract.fare}, StartTime: ${startTime}`);
-            $rideContractsList.append($rideContract);
-        };
+      const rideCount = await App.rideContracts.rideCount()
+      const $rideContractsList = $('#rideContracts');
+      $rideContractsList.empty();
+
+      // Render danh sách các ride contracts
+  
+      const $rideContractsTable = $('#rideContractsTable');
+      $rideContractsTable.empty();
+
+      // Create table header
+      const $tableHeader = $('<thead>').addClass('thead-dark');
+      $tableHeader.append($('<tr>').append(
+          $('<th>').text('Start Point'),
+          $('<th>').text('End Point'),
+          $('<th>').text('Fare'),
+          $('<th>').text('Start Time'),
+          $('<th>').text('Availability'),
+          $('<th>').text('Passengers Joined'),
+          $('<th>').text('Actions') // Thêm cột cho các hành động
+      ));
+      $rideContractsTable.append($tableHeader);
+
+      // Create table body
+      const $tableBody = $('<tbody>');
+      for (var i = 1; i <= rideCount; i++) {
+          const rideContract = await App.rideContracts.rides(i);
+
+          // Convert start time from timestamp to formatted date
+          const startTime = new Date(rideContract.startTime * 1000).toLocaleString();
+
+          // Check availability
+          const isAvailable = rideContract.isActive ? 'Available' : 'Not Available';
+
+          
+          
+
+         
+          // Create action button based on user's role
+          let $actionButton;
+          if (rideContract.isActive)
+          if (rideContract.driver.toLowerCase() === App.account.toLowerCase()) {
+              $actionButton = $('<button>').text('Complete').addClass('btn btn-primary btn-sm');
+              $actionButton.click(() => App.completeRide(rideContract.id));
+          } else {
+              $actionButton = $('<button>').text('Join').addClass('btn btn-primary btn-sm');
+              $actionButton.click(() => App.joinRide(rideContract.id, rideContract.fare));
+          }
+          const $row = $('<tr>').append(
+              $('<td>').text(rideContract.startPoint),
+              $('<td>').text(rideContract.endPoint),
+              $('<td>').text(rideContract.fare),
+              $('<td>').text(startTime),
+              $('<td>').text(isAvailable),
+              $('<td>').text(rideContract.numOfPassengers),
+              $('<td>').append($actionButton) // Append action button to the row
+              
+          );
+          $tableBody.append($row);
+      }
+      $rideContractsTable.append($tableBody);
     },
   
     createRide: async () => {
@@ -115,6 +163,28 @@ App = {
       await App.rideContracts.createRide(startPoint, endPoint, fare, startTime, { from: App.account });
       window.location.reload();
     },
+    joinRide: async (rideId, fare) => {
+      try {
+          await App.rideContracts.joinRide(rideId,  { from: App.account, value: fare*1e18}); // Pass any required parameters
+          alert('Successfully joined the ride!');
+          await App.renderRides(); // Render the rides again after joining
+          await App.updateBalance();// Cập nhật số dư khi tải ứng dụng
+      } catch (error) {
+          console.error('Error joining ride:', error);
+          alert('An error occurred while joining the ride. Please try again.');
+      }
+  },
+  
+  completeRide: async (rideId) => {
+      try {
+          await App.rideContracts.completeRide(rideId, { from: App.account }); // Pass any required parameters
+          alert('Ride completed and fares distributed!');
+          await App.renderRides(); // Render the rides again after completing
+      } catch (error) {
+          console.error('Error completing ride:', error);
+          alert('An error occurred while completing the ride. Please try again.');
+      }
+  },
   
     setLoading: (boolean) => {
       App.loading = boolean;
