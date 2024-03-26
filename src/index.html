@@ -19,6 +19,8 @@
     <input type="text" id="endPoint" name="endPoint" required><br><br>
     <label for="fare">Fare (ETH):</label>
     <input type="number" id="fare" name="fare" required><br><br>
+    <label for="numOfSeats">Number of Seats:</label>
+    <input type="number" id="numOfSeats" name="numOfSeats" required min = "1"><br><br>
     <label for="startDateTime">Start Date and Time:</label>
     <input type="datetime-local" id="startDateTime" name="startDateTime" min="{{ currentDateTime }}" required><br><br>
     <button class= "btn btn-primary" type="submit">Add Contract</button>

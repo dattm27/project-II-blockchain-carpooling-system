@@ -14,6 +14,7 @@ contract RideContract {
         string endPoint;    //destination
         uint256 fare;
         uint256 startTime;
+        uint numOfSeats; 
         uint numOfPassengers; 
         address payable[] passengers;
         bool isActive;
@@ -45,7 +46,7 @@ contract RideContract {
        
     }
 
-    function createRide(string calldata _startPoint, string calldata _endPoint, uint256 _fare, uint256 _startTime) external {
+    function createRide(string calldata _startPoint, string calldata _endPoint, uint256 _fare, uint256 _startTime, uint _numOfSeats) external {
         require(_fare > 0, "Fare must be greater than zero");
         rideCount++; // Tăng số lượng chuyến xe
 
@@ -58,6 +59,7 @@ contract RideContract {
         newRide.fare = _fare;
         newRide.startTime = _startTime;
         newRide.isActive = true;
+        newRide.numOfSeats = _numOfSeats; 
         newRide.passengers ;
         newRide.numOfPassengers = 0;
         // Lưu trữ chuyến xe vào mapping

@@ -104,7 +104,8 @@ App = {
           $('<th>').text('End Point'),
           $('<th>').text('Fare'),
           $('<th>').text('Start Time'),
-          $('<th>').text('Availability'),
+          $('<th>').text('Status'),
+          $('<th>').text('Number of Seats'),
           $('<th>').text('Passengers Joined'),
           $('<th>').text('Actions') // Thêm cột cho các hành động
       ));
@@ -141,6 +142,7 @@ App = {
               $('<td>').text(rideContract.fare),
               $('<td>').text(startTime),
               $('<td>').text(isAvailable),
+              $('<td>').text(rideContract.numOfSeats),
               $('<td>').text(rideContract.numOfPassengers),
               $('<td>').append($actionButton) // Append action button to the row
               
@@ -157,10 +159,10 @@ App = {
       const fare = $('#fare').val();
       // Get the value of the start date and time input field
       const startDateTimeInput = document.getElementById('startDateTime').value;
-
+      const numOfSeats = $('#numOfSeats').val();
       // Convert the start date and time to Unix timestamp
       const startTime = Math.floor(new Date(startDateTimeInput).getTime() / 1000);
-      await App.rideContracts.createRide(startPoint, endPoint, fare, startTime, { from: App.account });
+      await App.rideContracts.createRide(startPoint, endPoint, fare, startTime, numOfSeats,{ from: App.account });
       window.location.reload();
     },
     joinRide: async (rideId, fare) => {
