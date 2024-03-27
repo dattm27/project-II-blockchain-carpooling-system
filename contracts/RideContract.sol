@@ -12,7 +12,7 @@ contract RideContract {
         address payable driver; 
         string startPoint; //departure
         string endPoint;    //destination
-        uint256 fare;
+        uint256 fare;   
         uint256 startTime;
         uint numOfSeats; 
         uint numOfPassengers; 
@@ -66,38 +66,37 @@ contract RideContract {
         rides[rideCount] = newRide;
     }
     
-
+    //khi người dùng nhấn join vào chuyến có thể đi
     function joinRide(uint256 _rideId) external payable {
         require(_rideId <= rideCount, "Invalid ride ID");
+        require(msg.sender != rides[_rideId].driver, "Join Ride: This is driver address, the ride need a passenger join");
+        //kiểm tra nếu còn đủ chỗ để thêm hành khách vapf 
+        require(rides[_rideId].numOfPassengers < rides[_rideId].numOfSeats, "");
         require(msg.value == rides[_rideId].fare*1e18, "Incorrect fare amount");
-
+        
+        // thêm tài khoản của hành khách vào danh sách hành khách của chuyến
         rides[_rideId].passengers.push(msg.sender);
-        rides[_rideId].numOfPassengers ++ ;
-        clientBalances[msg.sender] -=   msg.value;
-        ownerBalance += msg.value;
-        (rides[_rideId].driver).transfer(msg.value);
-       
+        rides[_rideId].numOfPassengers ++ ; 
     }
 
+    //khi chuyến đi kết thúc, tài xế thực hiện lấy tiền của hành khách
     function completeRide(uint256 _rideId) external  {
         require(_rideId <= rideCount, "Invalid ride ID");
-
+        require(msg.sender == rides[_rideId].driver, "Only driver can call this function");
         Ride storage ride = rides[_rideId];
         require(ride.isActive, "Ride is not active");
 
-        // Distribute fare to driver and passengers
-        // uint256 totalFare = ride.fare * (ride.passengers.length + 1);
-        // uint256 farePerPassenger = totalFare / (ride.passengers.length + 1);
-        
-        //(ride.driver).transfer(farePerPassenger);
-        // for (uint256 i = 0; i < ride.passengers.length; i++) {
-        //     (ride.passengers[i]).transfer(farePerPassenger);
-        // }
+        //rút tiền từ hợp đồng về tài khoản
+        address payable recipient = address(uint160(msg.sender)); // Chuyển msg.sender thành address payable
+        (bool callSuccess, ) = recipient.call.value(address(this).balance)("");
+        require(callSuccess, "Withdraw coin in the contract failed");
+
 
         // Deactivate ride
         ride.isActive = false;
 
     }
+    
     function getPassengers(uint rideId) external view returns (address payable[] memory) {
         require(rideId <= rideCount, "Invalid ride ID");
         return rides[rideId].passengers;

@@ -182,6 +182,7 @@ App = {
           await App.rideContracts.completeRide(rideId, { from: App.account }); // Pass any required parameters
           alert('Ride completed and fares distributed!');
           await App.renderRides(); // Render the rides again after completing
+          await App.updateBalance();// Cập nhật số dư khi tải ứng dụng
       } catch (error) {
           console.error('Error completing ride:', error);
           alert('An error occurred while completing the ride. Please try again.');
