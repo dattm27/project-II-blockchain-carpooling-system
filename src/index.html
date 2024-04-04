@@ -7,27 +7,50 @@
   <title>Carpooling</title>
 </head>
 <body class="container">
-  <h1>Add Ride Contract</h1>
+  <h3>Add Ride Contract</h3>
   
   <div id="account"></div>
   <div id="balance"></div>
   <br>
   <form id="contractForm" onSubmit="App.createRide(); return false;">
-    <label for="startPoint">Start Point:</label>
-    <input type="text" id="startPoint" name="startPoint" required><br><br>
-    <label for="endPoint">End Point:</label>
-    <input type="text" id="endPoint" name="endPoint" required><br><br>
-    <label for="fare">Fare (ETH):</label>
-    <input type="number" id="fare" name="fare" required><br><br>
-    <label for="numOfSeats">Number of Seats:</label>
-    <input type="number" id="numOfSeats" name="numOfSeats" required min = "1"><br><br>
-    <label for="startDateTime">Start Date and Time:</label>
-    <input type="datetime-local" id="startDateTime" name="startDateTime" min="{{ currentDateTime }}" required><br><br>
-    <button class= "btn btn-primary" type="submit">Add Contract</button>
+    <div class="row">
+      <div class="col-md-6">
+        <label for="startPoint">Start Point:</label>
+        <input type="text" class="form-control" id="startPoint" name="startPoint" required>
+      </div>
+      <div class="col-md-6">
+        <label for="endPoint">End Point:</label>
+        <input type="text" class="form-control" id="endPoint" name="endPoint" required>
+      </div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-md-6">
+        <label for="fare">Fare (ETH):</label>
+        <input type="number" class="form-control" id="fare" name="fare" required>
+      </div>
+      <div class="col-md-6">
+        <label for="numOfSeats">Number of Seats:</label>
+        <input type="number" class="form-control" id="numOfSeats" name="numOfSeats" required min="1">
+      </div>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col-md-6">
+        <label for="startDateTime">Start Date and Time:</label>
+        <input type="datetime-local" class="form-control" id="startDateTime" name="startDateTime" min="{{ currentDateTime }}" required>
+      </div>
+    </div>
+    <br>
+    <button class="btn btn-primary" type="submit">Add Contract</button>
   </form>
-  <h1>Ride Contracts</h1>
+  
+  <h3>Ride Contracts</h3>
   <ul id="rideContracts"></ul>
   <table id="rideContractsTable" class="table"></table>
+  <table id="createdRidesTable" class="table"></table>
+  <table id="joinedRidesTable" class="table"></table>
+  
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/web3@1.3.6/dist/web3.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
