@@ -1,46 +1,122 @@
-import logo from './logo.svg';
-import './App.css';
-import Message from './components/Message';
-import CreateRide from './components/CreateRide';
-import Web3 from 'web3';
-import React, { Component } from 'react';
+// import logo from './logo.svg';
+// import './App.css';
+ import CreateRide from './components/CreateRide';
+// import Web3 from 'web3';
+// import React, { Component } from 'react';
+import YourRides from './components/YourRides';
 import MetamaskConnect from './components/Metamask';
-// function App() {
-//   return (
-//      <div><CreateRide/></div>
-//     // <div className="App">
-//     //   <header className="App-header">
-//     //     <img src={logo} className="App-logo" alt="logo" />
-//     //     <p>
-//     //       Edit <code>src/App.js</code> and save to reload.
-//     //     </p>
-//     //     <a
-//     //       className="App-link"
-//     //       href="https://reactjs.org"
-//     //       target="_blank"
-//     //       rel="noopener noreferrer"
-//     //     >
-//     //       Learn React
-//     //     </a>
-//     //   </header>
-//     // </div>
+import JoinRide from './components/JoinRide';
+// import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+// // function App() {
+// //   return (
+// //      <div><CreateRide/></div>
+// //     // <div className="App">
+// //     //   <header className="App-header">
+// //     //     <img src={logo} className="App-logo" alt="logo" />
+// //     //     <p>
+// //     //       Edit <code>src/App.js</code> and save to reload.
+// //     //     </p>
+// //     //     <a
+// //     //       className="App-link"
+// //     //       href="https://reactjs.org"
+// //     //       target="_blank"
+// //     //       rel="noopener noreferrer"
+// //     //     >
+// //     //       Learn React
+// //     //     </a>
+// //     //   </header>
+// //     // </div>
    
-//   );
+// //   );
+// // }
+
+// // export default App;
+
+// // App.js
+
+
+// import NavigationBar from './components/NavBar';
+
+// class App extends Component {
+//   render() {
+//     return (
+      
+     
+//     );
+//   }
 // }
 
 // export default App;
 
-// App.js
 
-class App extends Component {
-  render() {
-    return (
-      <div>
-        <MetamaskConnect />
-        {/* Thêm các component khác và chức năng create ride, join ride ở đây */}
-      </div>
-    );
-  }
+
+
+
+import React, { useState } from 'react';
+import { Nav, Navbar, Container } from 'react-bootstrap';
+
+function App() {
+  const [activeTab, setActiveTab] = useState('home');
+  const [account, setAccount] = useState(null); // State để lưu trữ tài khoản hiện tại
+  const handleSelect = (selectedTab) => {
+    setActiveTab(selectedTab);
+  };
+
+  // Callback function để nhận tài khoản từ MetamaskConnect
+  const handleAccountChange = (newAccount) => {
+    setAccount(newAccount);
+  };
+
+  return (
+    <div className="App">
+     <MetamaskConnect  renderWithAccount={handleAccountChange} />
+      <Navbar  collapseOnSelect bg="light" expand="lg">
+        <Container>
+          <Navbar.Brand href="#">Carpooling</Navbar.Brand>
+          <Navbar.Toggle aria-controls="basic-navbar-nav" />
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto" activeKey={activeTab} onSelect={handleSelect}>
+              <Nav.Item>
+                <Nav.Link eventKey="home">Home</Nav.Link>
+              </Nav.Item>
+             <Nav.Item>
+                <Nav.Link eventKey="create">Create Ride</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="join">Join Ride</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="history">History</Nav.Link>
+              </Nav.Item>
+              <Nav.Item>
+                <Nav.Link eventKey="history">Account</Nav.Link>
+              </Nav.Item>
+            </Nav>
+          </Navbar.Collapse>
+        </Container>
+      </Navbar>
+      {activeTab === 'home' && (
+        <div className='container'>
+         <YourRides account={account} />
+        </div>
+      )}
+      {activeTab === 'create' && (
+        <div className='container'>
+         <CreateRide  handleTabChange={handleSelect}/>
+        </div>
+      )}
+      {activeTab === 'join' && (
+        <div>
+          <JoinRide account={account}/>
+        </div>
+      )}
+      {activeTab === 'history' && (
+        <div>
+          {/* Component History */}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default App;
