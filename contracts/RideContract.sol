@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 //pragma solidity >=0.4.22 <0.9.0;
 pragma solidity ^0.5.0;
-
+pragma experimental ABIEncoderV2;
 contract RideContract {
     uint public rideCount;
     
@@ -33,8 +33,8 @@ contract RideContract {
     mapping(address => uint[]) private joinedRides; // Lưu trữ danh sách các chuyến đi đã tham gia của mỗi hành khách
     mapping(uint => Ride) public rides;
     mapping(uint => mapping(uint => Passenger)) public passengers;
-    mapping(uint => Passenger []) public pendingPassengers;
-
+    mapping(uint => Passenger[]) public pendingPassengers;
+    mapping(uint => uint) public numOfPendings; // số lượng pending của mỗi chuyến
    
     constructor() public {
         // createRide("Start Point", "End Point", 100); // Tạo một chuyến xe mẫu khi khởi tạo
@@ -57,6 +57,7 @@ contract RideContract {
         Ride memory ride = rides[_rideId];
         return (ride.startPoint, ride.endPoint, ride.fare, ride.startTime, ride.isActive, ride.numOfSeats, ride.numOfPassengers);
     }
+    
     // hàm hoàn tiền về cho hành khách khi bị huỷ 
     function withdrawFunds(address payable _receiver, uint256 _amount) internal {
     (bool success, ) = _receiver.call.value(_amount)("");
@@ -84,6 +85,8 @@ contract RideContract {
         rides[rideCount] = newRide;
         // Thêm chuyến xe vào danh sách chuyến đi đã tạo của tài xế
         createdRides[msg.sender].push(newRide.id);
+
+        numOfPendings[rideCount] = 0;
     }
     //Thêm thông tin hành khách vào chuyến xe
     function addPassenger(uint _rideId, address payable _addr, string memory _phoneNumber, uint _numOfPeople) public {
@@ -111,6 +114,9 @@ contract RideContract {
         require(rides[_rideId].numOfPassengers < rides[_rideId].numOfSeats, "");
         require(msg.value == _numberOfPeople*rides[_rideId].fare*1e18, "Incorrect fare amount");
         pendingPassengers[_rideId].push(Passenger(msg.sender, _phoneNumber, _numberOfPeople, 0, false));
+        numOfPendings[_rideId]++;
+        //Them chuyen xe vao danh sach chuyen xe da tham gia
+        joinedRides[msg.sender].push(_rideId);
     }
     //2. Hàm tài xế chấp nhận hành khách và tạo mã xác nhận
     // function acceptPassenger(uint _rideId, address _passenger) public {
@@ -189,4 +195,7 @@ contract RideContract {
         require(rideId <= rideCount, "Invalid ride ID");
         return rides[rideId].passengers;
     }
+
+ 
+
 }

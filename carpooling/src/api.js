@@ -7,7 +7,7 @@ const web3 = new Web3(window.ethereum);
 const contractAddress = '0xD2374689F1fdaE4c2327020CBf55Cb16936f5061';
 const contractABI = RideContract.abi;
 const networkId = await web3.eth.net.getId();
-const deployedNetwork = RideContract.networks[networkId];
+const deployedNetwork = await RideContract.networks[networkId];
 const accounts = await web3.eth.getAccounts();
 const contract =new web3.eth.Contract(
   RideContract.abi,
@@ -26,7 +26,8 @@ export const getCreatedRides = async (userAddress) => {
 
 export const getJoinedRides = async (userAddress) => {
   try {
-    const joinedRides = await contract.methods.getJoinedRides(userAddress).call();
+    const joinedRides = await contract.methods.getJoinedRides(accounts[0]).call();
+    console.log(joinedRides);
     return joinedRides;
   } catch (error) {
     console.error('Error fetching joined rides:', error);
@@ -84,7 +85,7 @@ export const getAvailableRides = async () => {
 
 
 // Khi người dùng bấm join chuyến và nhập các thông tin
-const joinPendingRide = async (_rideId, _phoneNumber, _numberOfPeople, userAddress, calculatedValue) => {
+export const joinPendingRide = async (_rideId, _phoneNumber, _numberOfPeople, userAddress, calculatedValue) => {
   try {
       // Gọi hàm joinPendingRide từ smart contract
       await contract.methods.joinPendingRide(_rideId, _phoneNumber, _numberOfPeople).send({ from: userAddress, value: calculatedValue*1e18 });
@@ -96,4 +97,22 @@ const joinPendingRide = async (_rideId, _phoneNumber, _numberOfPeople, userAddre
   }
 };
 
-export { joinPendingRide };
+//xem danh sách pending của một chuyến đi 
+export const getPendingPassengers = async (rideId) => {
+  try {
+      const pendingPassengers = [];
+      const numOfPendings =  await contract.methods.numOfPendings(rideId).call();
+      for (let i = 0; i< numOfPendings; i++){
+
+        const passenger = await contract.methods.pendingPassengers(rideId,i).call();
+        pendingPassengers.push(passenger);
+      }
+      
+      // Trả về danh sách tất cả các hành khách đang chờ
+      return pendingPassengers;
+
+  } catch (error) {
+    throw new Error('Error fetching ride pending list: ' + error.message);
+  }
+};
+

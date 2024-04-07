@@ -6,6 +6,7 @@
 import YourRides from './components/YourRides';
 import MetamaskConnect from './components/Metamask';
 import JoinRide from './components/JoinRide';
+import ProcessRide from './components/ProcessRide';
 // import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 // // function App() {
 // //   return (
@@ -58,6 +59,8 @@ import { Nav, Navbar, Container } from 'react-bootstrap';
 function App() {
   const [activeTab, setActiveTab] = useState('home');
   const [account, setAccount] = useState(null); // State để lưu trữ tài khoản hiện tại
+  const [selectedRideId, setSelectedRideId] = useState(null); // Khai báo selectedRideId ở đây
+
   const handleSelect = (selectedTab) => {
     setActiveTab(selectedTab);
   };
@@ -97,7 +100,7 @@ function App() {
       </Navbar>
       {activeTab === 'home' && (
         <div className='container'>
-         <YourRides account={account} />
+         <YourRides account={account}  handleTabChange={handleSelect} setSelectedRideId={setSelectedRideId} />
         </div>
       )}
       {activeTab === 'create' && (
@@ -114,6 +117,9 @@ function App() {
         <div>
           {/* Component History */}
         </div>
+      )}
+      {activeTab === 'process' && selectedRideId && (
+        <ProcessRide rideId={selectedRideId} />
       )}
     </div>
   );
