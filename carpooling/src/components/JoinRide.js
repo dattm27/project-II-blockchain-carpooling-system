@@ -10,7 +10,14 @@ const JoinRide = ({ account }) => {
     const [selectedRide, setSelectedRide] = useState(null);
     const [phoneNumber, setPhoneNumber] = useState('');
     const [numOfPeople, setNumOfPeople] = useState('');
+    const [showSuccessModal, setShowSuccessModal] = useState(false); // State để điều khiển modal hiển thị sau khi tham gia chuyến đi thành công
+    const handleCloseSuccessModal = () => setShowSuccessModal(false); // Hàm đóng modal thành công
+    const handleShowSuccessModal = () => setShowSuccessModal(true); // Hàm mở modal thành công
 
+    const handleCheckYourRideList = () => {
+        handleCloseSuccessModal(); // Đóng modal thành công khi chuyển sang tab chuyến của bạn
+        // Thêm bất kỳ logic nào khác bạn muốn thực hiện khi chuyển sang tab chuyến của bạn
+    };
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
 
@@ -18,7 +25,9 @@ const JoinRide = ({ account }) => {
         const fetchAvailableRides = async () => {
             try {
                 //lấy ra các chuyến xe available
-                const rides = await getAvailableRides();
+               // console.log('join account', account);
+                const rides = await getAvailableRides(account);
+               
                 setAvailableRides(rides);
                 //console.log(rides);
             } catch (error) {
@@ -27,7 +36,7 @@ const JoinRide = ({ account }) => {
         };
 
         fetchAvailableRides();
-    }, [account]);
+    }, []);
 
     const handleJoinRide = async() => {
         // Xử lý logic khi người dùng tham gia chuyến đi
@@ -37,7 +46,7 @@ const JoinRide = ({ account }) => {
         try {
             // Thực hiện gọi hàm joinPendingRide
             await joinPendingRide(selectedRide.id, phoneNumber, numOfPeople, account, selectedRide.fare*numOfPeople);
-           
+           //alert('Pending');
         } catch (error) {
             console.error('Error joining ride:', error);
             // Xử lý lỗi nếu có
@@ -74,27 +83,47 @@ const JoinRide = ({ account }) => {
                     </Button>
                 </Modal.Footer>
             </Modal>
+            <Modal show={showSuccessModal} onHide={handleCloseSuccessModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Ride Joined Successfully</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p>You have successfully joined the ride!</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={handleCloseSuccessModal}>
+                        Close
+                    </Button>
+                    <Button variant="primary" onClick={handleCheckYourRideList}>
+                        Check Your Ride List
+                    </Button>
+                </Modal.Footer>
+            </Modal>
             {/* Danh sách các chuyến đi sẵn sàng */}
             <div className="d-flex flex-wrap justify-content-center">
-                {availableRides.map((ride, index) => (
-                   
-                    <Card key={index} style={{ width: '28rem', margin: '5px' }}>
-                    <Card.Body className="d-flex justify-content-between align-items-center">
-                        <div>
-                            <Card.Title>{ride.startPoint} - {ride.endPoint}</Card.Title>
-                            <Card.Text>
-                                Start Time: {ride.startTime}
-                                <br />
-                                Fare: ETH {ride.fare}
-                                <br />
-                                Seats Available: {Number(ride.numOfSeats) - Number(ride.numOfPassengers)}
-                            </Card.Text>
-                        </div>
-                        <Button variant="primary" onClick={() => { setSelectedRide(ride); handleShow(); }}>Join</Button>
-                    </Card.Body>
-                </Card>
-                ))}
+               {availableRides.length > 0 ? (
+                    availableRides.map((ride, index) => (
+                        <Card key={index} style={{ width: '28rem', margin: '5px' }}>
+                            <Card.Body className="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <Card.Title>{ride.startPoint} - {ride.endPoint}</Card.Title>
+                                    <Card.Text>
+                                        Start Time: {ride.startTime}
+                                        <br />
+                                        Fare: ETH {ride.fare}
+                                        <br />
+                                        Seats Available: {Number(ride.numOfSeats) - Number(ride.numOfPassengers)}
+                                    </Card.Text>
+                                </div>
+                                <Button variant="primary" onClick={() => { setSelectedRide(ride); handleShow(); }}>Join</Button>
+                            </Card.Body>
+                        </Card>
+                    ))
+                ) : (
+                    <p className='text-center fs-5' style={{margin: '5px'}}>No available rides</p>
+                )}
             </div>
+            
         </>
     );
 };
