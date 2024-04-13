@@ -39,7 +39,7 @@ const RideHistory = ({ account }) => {
         <div className='container'>
         <h2>Ride History</h2>
         {rideHistory.length > 0 ? (
-            rideHistory.map((ride, index) => (
+            rideHistory.slice().reverse().map((ride, index) => (
                 <Card key={index} style={{ width: '28rem', margin: '5px' }}>
                     <Card.Body className="d-flex justify-content-between align-items-center">
                         <div>

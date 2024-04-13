@@ -3,9 +3,9 @@
 import Web3 from 'web3';
 import {useEffect, useState} from 'react';
 import Button from 'react-bootstrap/Button';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Welcome from './components/Welcome';
-import Home  from './components/Home';
+// import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+ import Welcome from './components/Welcome';
+ import Home  from './components/Home';
 function App() {
   //properties
   const [walletAddress, setWalletAddress]= useState("");
@@ -17,7 +17,7 @@ function App() {
       console.log('Detected');
       try {
         const accounts = await window.ethereum.request({method: "eth_requestAccounts"});
-        console.log(accounts);
+        //console.log(accounts);
         setWalletAddress(accounts[0]);
       }catch(error){
         console.log('Error connecting with MetaMask');
@@ -41,28 +41,34 @@ function App() {
   useEffect (() => {
     //the code that we want to run
     //console.log("Login account" , walletAddress);
-   
+   connectWallet();
     
     //Khi đã đăng nhập vào ví Metamask, chuyến đến màn hình chính
     //optional return function 
     return () =>{
       //console.log('I am being cleaned up!');
     }
-  }, [walletAddress]); // The dependencies array
+  }, []); // The dependencies array
   return (
     
-    <div >
+    <div className=''>
      
       {/* Kiểm tra kết nối ví điện tử và đăng nhập tài khoản */}
-      {walletAddress!=="" ?  (<Home walletAddress={walletAddress} />) : (<Welcome connectWallet={connectWallet}/>) }
-       {/* <header className="App-header">
-         <img src={logo} className="App-logo" alt="logo" />
-     
-        <h3>Carpooling</h3>
-        <Button variant="primary" onClick={connectWallet}>Connect Wallet</Button>{' '}
-       
+      {/* {walletAddress!=="" ?  (<Home walletAddress={walletAddress} />) : (<Welcome connectWallet={connectWallet}/>) } */}
+       {walletAddress=="" &&<div>
+          <header className="App-header">
+            <img src={logo} className="App-logo" alt="logo" />
         
-      </header>  */}
+            <h3>Carpooling</h3>
+            <Button variant="primary" onClick={connectWallet}>Connect Wallet</Button>{' '}
+          
+            
+          </header> 
+        </div>
+      }
+      {walletAddress !== "" && (<Home walletAddress={walletAddress} />)}
+
+      
     </div>
    
   );

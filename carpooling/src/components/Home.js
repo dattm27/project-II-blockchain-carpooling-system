@@ -61,7 +61,7 @@ function Home({walletAddress})  {
               )}
               {activeTab === 'join' && (
                 <div>
-                  <JoinRide account ={walletAddress}/>
+                  <JoinRide account ={walletAddress} handleTabChange={handleSelect}/>
                 </div>
               )}
               {activeTab === 'history' && (

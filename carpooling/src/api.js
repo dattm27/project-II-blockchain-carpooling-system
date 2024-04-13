@@ -103,10 +103,16 @@ export const getPendingPassengers = async (rideId) => {
   try {
       const pendingPassengers = [];
       const numOfPendings =  await contract.methods.numOfPendings(rideId).call();
-      for (let i = 0; i< numOfPendings; i++){
+      for (let i = 0; i< 3; i++){
 
-        const passenger = await contract.methods.pendingPassengers(rideId,i).call();
-        pendingPassengers.push(passenger);
+        try{
+          const passenger = await contract.methods.pendingPassengers(rideId,i).call();
+          pendingPassengers.push(passenger);
+        }
+        catch (error){
+          console.log('error when loading pending list', error.message);
+        }
+       
       }
       
       // Trả về danh sách tất cả các hành khách đang chờ
@@ -133,7 +139,10 @@ export const acceptPassenger = async (rideId, passengerIndex,account) => {
 // Hàm để chấp nhận một hành khách vào chuyến đi
 export const declinePassenger = async (rideId, passengerIndex,account) => {
   try {
-    await contract.methods.declinePassenger(rideId, passengerIndex).send({ from: account}); // Thay 'yourAddress' bằng địa chỉ của bạn
+    console.log('decline rideID', rideId, 'index', passengerIndex );
+    const addr =await contract.methods.pendingPassengers(rideId, passengerIndex).call();
+    console.log('addr to refund:', addr.addr);
+    await contract.methods.declinePassenger(rideId, passengerIndex).send({ from: account}); 
     console.log('Passenger declined successfully');
   } catch (error) {
     console.error('Error  decline passenger:', error);
@@ -167,6 +176,15 @@ export const getPassenger = async (rideId, passengerIndex) => {
   }
 };
 
+//Hàm cancelRide cho hành khách đang ở trong pending có thể huỷ chuyến và lấy lại tiền
+export const cancelRide = async (_rideId, account) => {
+  try {
+    await contract.methods.cancelRide(_rideId, account).send({ from: account}); 
+  }
+  catch (error) {
+    throw new Error('Error cancelling ride' , error.message);
+  }
+}
 //Hàm kết thúc chuyến đi
 export const completeRide = async (_rideId, account) => {
   try {
@@ -180,6 +198,14 @@ export const completeRide = async (_rideId, account) => {
   }
 }
 
+//Khách hàng confirm là chuyến đã bị huỷ 
+export const confirmDeclined = async (_rideId, account) => {
+  try {
+    await contract.methods.confirmDeclined(_rideId).send({from: account});
+  }catch(error) {
+    throw new Error ('Error when confirming decline', error.message);
+  }
+}
 //Lấy ra số lượng pending của một chuyến đi 
 export const getNumOfPendings = async (_rideId)=>{
   try {
@@ -190,7 +216,7 @@ export const getNumOfPendings = async (_rideId)=>{
     throw new Error ('Error when getNumOfPendings');
   }
 }
-
+// khi hành khách bấm đến nơi => tài xế mới lấy được tiền
 export const arrivedRide = async( _rideId, account) =>{
   try {
     await contract.methods.arrive(_rideId).send({from: account});
@@ -209,3 +235,31 @@ export const getRideHistory = async (account) => {
     return [];
   }
 };
+
+
+export const checkPassengerInPendings = async (account, _rideId) => {
+  try {
+    const isPending = await contract.methods.isPassengerInPendingList(_rideId, account).call();
+    console.log('isPending',isPending);
+    if (isPending != 0) return true;
+    return false;
+
+  }
+  catch (error){
+    console.log('Error when checking pending list: ' + error.message);
+  }
+}
+
+
+export const checkPassengerInList= async (account, _rideId) => {
+  try {
+    const isPassenger = await contract.methods.isPassengerInList(_rideId, account).call();
+    console.log('isPassenger',isPassenger);
+    if (isPassenger != 0) return true;
+    return false;
+
+  }
+  catch (error){
+    console.log('Error when checking passenger list: ' + error.message);
+  }
+}

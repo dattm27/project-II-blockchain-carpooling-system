@@ -38,7 +38,7 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
     }
   };
 
-  const handleDecline = async (passengerIndex) => {
+  const handleDecline = async (passengerAddress, passengerIndex) => {
     try {
       //await declinePassenger(rideId, passengerIndex);
       await declinePassenger(rideId, passengerIndex, account);  
@@ -91,7 +91,7 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
                   <td>{passenger.numOfPeople.toString()}</td>
                   <td>
                     <Button variant="success" onClick={() => handleAccept(index)}>Accept</Button>{' '}
-                    <Button variant="danger" onClick={() => handleDecline(index)}>Decline</Button>
+                    <Button variant="danger" onClick={() => handleDecline( passenger.addr, index)}>Decline</Button>
                   </td>
                 </tr>
               ))}

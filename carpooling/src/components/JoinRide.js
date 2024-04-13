@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { getAvailableRides, joinPendingRide } from '../api';
 import { Card, Button, Modal, Form } from 'react-bootstrap';
 
-const JoinRide = ({ account }) => {
+const JoinRide = ({ account, handleTabChange }) => {
     const [show, setShow] = useState(false);
     const [availableRides, setAvailableRides] = useState([]);
     const [selectedRide, setSelectedRide] = useState(null);
@@ -15,11 +15,11 @@ const JoinRide = ({ account }) => {
     const handleShowSuccessModal = () => setShowSuccessModal(true); // Hàm mở modal thành công
 
     const handleCheckYourRideList = () => {
-        handleCloseSuccessModal(); // Đóng modal thành công khi chuyển sang tab chuyến của bạn
-        // Thêm bất kỳ logic nào khác bạn muốn thực hiện khi chuyển sang tab chuyến của bạn
+        handleCloseSuccessModal(); // Đóng modal thành công 
+        handleTabChange('home'); // Chuyển tab sang "Home"
     };
     const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
+    const handleShow = async() => setShow(true);
 
     useEffect(() => {
         const fetchAvailableRides = async () => {
@@ -27,7 +27,6 @@ const JoinRide = ({ account }) => {
                 //lấy ra các chuyến xe available
                // console.log('join account', account);
                 const rides = await getAvailableRides(account);
-               
                 setAvailableRides(rides);
                 //console.log(rides);
             } catch (error) {
@@ -46,7 +45,9 @@ const JoinRide = ({ account }) => {
         try {
             // Thực hiện gọi hàm joinPendingRide
             await joinPendingRide(selectedRide.id, phoneNumber, numOfPeople, account, selectedRide.fare*numOfPeople);
+            handleShowSuccessModal(); // Hiển thị modal "Ride Joined Successfully"
            //alert('Pending');
+
         } catch (error) {
             console.error('Error joining ride:', error);
             // Xử lý lỗi nếu có
@@ -71,7 +72,7 @@ const JoinRide = ({ account }) => {
                     </Form.Group>
                     <Form.Group controlId="numOfPassengers">
                         <Form.Label>Number of Passengers:</Form.Label>
-                        <Form.Control type="number" placeholder="Enter number of passengers" min='1' onChange={(e) => setNumOfPeople(e.target.value)} />
+                        <Form.Control type="number" placeholder="Enter number of passengers"  min='1'      max={selectedRide ? Number(selectedRide.numOfSeats) - Number(selectedRide.numOfPassengers) : 0}  onChange={(e) => setNumOfPeople(e.target.value)} />
                     </Form.Group>
                 </Modal.Body>
                 <Modal.Footer>
