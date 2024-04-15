@@ -76,7 +76,7 @@ contract RideContract {
     require(success, "Transfer failed.");
     }
 
-
+    // Đầu tiên, driver tạo chuyến đi mới
     function createRide(string calldata _startPoint, string calldata _endPoint, uint256 _fare, uint256 _startTime, uint _numOfSeats) external {
         require(_fare > 0, "Fare must be greater than zero");
         rideCount++; // Tăng số lượng chuyến xe
@@ -102,8 +102,24 @@ contract RideContract {
         emit RideCreated(newRide.id, msg.sender, newRide.startPoint, newRide.endPoint, newRide.fare, newRide.startTime, newRide.numOfSeats);
 
     }
+    // Hành khách tìm kiếm một chuyến xe -> join vào pending chờ tài xế chấp nhận (lúc join vào hành khách thanh toán luôn)
+    function joinPendingRide(uint _rideId, string memory _phoneNumber, uint256 _numberOfPeople) public payable{
+        require(_rideId <= rideCount, "Invalid ride ID");
+        require(msg.sender != rides[_rideId].driver, "Join Ride: This is driver address, the ride need a passenger join");
+        //kiểm tra nếu còn đủ chỗ để thêm hành khách vào pending
+        require(rides[_rideId].numOfPassengers < rides[_rideId].numOfSeats, "");
+        //kiểm tra thêm hành khách đó đã nằm trong danh sách pending của chuyến đó chưa
+        require(isPassengerInPendingList(_rideId, msg.sender)==uint(0), "Join Ride: Passenger is already in pending list");
+        require(msg.value == _numberOfPeople*rides[_rideId].fare*1e18, "Incorrect fare amount");
+         numOfPendings[_rideId]++; //tăng lượng khách trong danh sách chờ 
+        pendingPassengers[_rideId].push(Passenger(msg.sender, _phoneNumber, _numberOfPeople, 0, false));
+       
+        //Them chuyen xe vao danh sach chuyen xe da tham gia
+        joinedRides[msg.sender].push(_rideId);
+        emit PassengerJoined(_rideId, msg.sender, _phoneNumber, _numberOfPeople);
+    }
   
-    //chấp nhận một hành khách vào chuyến
+    //chấp nhận một hành khách vào chuyến -> chuyển từ pending lên danh sách passengers
     function acceptPassenger(uint _rideId, uint _passengerIndex) public {
         require(_passengerIndex < pendingPassengers[_rideId].length, "Passenger index out of range");
         
@@ -123,6 +139,8 @@ contract RideContract {
         // Giảm độ dài của mảng đi một
         pendingPassengers[_rideId].pop();
     }
+
+    //từ chối một khách -> trả phí luôn cho người ta, xoá khỏi danh sách chờ
     function declinePassenger(uint _rideId, uint _passengerIndex) public {
         require(_rideId <= rideCount, "Invalid ride ID");
         require(msg.sender == rides[_rideId].driver, "Only driver can call this function");
@@ -138,82 +156,6 @@ contract RideContract {
         pendingPassengers[_rideId].pop();
   
         
-    }
-
-    // Hàm sinh mã xác nhận ngẫu nhiên
-    function generateVerificationCode() private view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % 9000 + 1000;
-    }
-    // 1. Khi hành khách join chuyến (nhập thông tin và thanh toán )
-    function joinPendingRide(uint _rideId, string memory _phoneNumber, uint256 _numberOfPeople) public payable{
-        require(_rideId <= rideCount, "Invalid ride ID");
-        require(msg.sender != rides[_rideId].driver, "Join Ride: This is driver address, the ride need a passenger join");
-        //kiểm tra nếu còn đủ chỗ để thêm hành khách vào pending
-        require(rides[_rideId].numOfPassengers < rides[_rideId].numOfSeats, "");
-        //kiểm tra thêm hành khách đó đã nằm trong danh sách pending của chuyến đó chưa
-        require(isPassengerInPendingList(_rideId, msg.sender)==uint(0), "Join Ride: Passenger is already in pending list");
-        require(msg.value == _numberOfPeople*rides[_rideId].fare*1e18, "Incorrect fare amount");
-         numOfPendings[_rideId]++; //tăng lượng khách trong danh sách chờ 
-        pendingPassengers[_rideId].push(Passenger(msg.sender, _phoneNumber, _numberOfPeople, 0, false));
-       
-        //Them chuyen xe vao danh sach chuyen xe da tham gia
-        joinedRides[msg.sender].push(_rideId);
-        emit PassengerJoined(_rideId, msg.sender, _phoneNumber, _numberOfPeople);
-    }
-    //2. Hàm tài xế chấp nhận hành khách và tạo mã xác nhận
-    // function acceptPassenger(uint _rideId, address _passenger) public {
-    //     Passenger storage passenger = pendingPassengers[_passenger][_rideId];
-    //     require(!passenger.accepted, "Passenger already accepted");
-    //     passenger.verificationCode = generateVerificationCode();
-    //     passenger.accepted = true;
-    // }
-    //3. Driver từ chối hành khách
-    // function rejectPendingPassenger(uint _rideId, address payable _passenger) public {
-    //     // Kiểm tra xem người gọi hàm có phải là tài xế của chuyến đi không
-    //     require(msg.sender == rides[_rideId].driver, "Only driver can reject pending passenger");
-
-    //     // Kiểm tra xem hành khách có tồn tại trong danh sách hàng đợi không
-    //     require(pendingPassengers[_passenger][_rideId].id == _rideId, "Passenger not found in pending list");
-
-    //     // Hoàn trả tiền đã gửi của hành khách
-    //     uint256 fareAmount = pendingPassengers[_passenger][_rideId].numOfPeople * rides[_rideId].fare * 1e18;
-    //    withdrawFunds(_passenger, fareAmount);
-
-    //     // Xóa hành khách khỏi danh sách hàng đợi
-    //     delete pendingPassengers[_passenger][_rideId];
-    // }
-
-    //4. Hàm hành khách nhập mã xác nhận và tham gia chuyến đi
-    // function enterVerificationCode(uint _rideId, uint256 _verificationCode) public {
-    //     Passenger storage passenger = pendingPassengers[msg.sender][_rideId];
-    //     require(passenger.accepted, "Passenger not accepted yet");
-    //     require(passenger.verificationCode == _verificationCode, "Incorrect verification code");
-    //     // Thêm hành khách vào danh sách của chuyến đi
-    //     addPassenger(_rideId, passenger.phoneNumber, passenger.numOfPeople);
-    //     // Xóa thông tin hành khách khỏi danh sách pending
-    //     delete pendingPassengers[msg.sender][_rideId];
-    // }
-
-    
-
-    //khi người dùng nhấn join vào chuyến có thể đi
-    function joinRide(uint256 _rideId) external payable {
-        require(_rideId <= rideCount, "Invalid ride ID");
-        require(msg.sender != rides[_rideId].driver, "Join Ride: This is driver address, the ride need a passenger join");
-        //kiểm tra nếu còn đủ chỗ để thêm hành khách vapf 
-        require(rides[_rideId].numOfPassengers < rides[_rideId].numOfSeats, "");
-        require(msg.value == rides[_rideId].fare*1e18, "Incorrect fare amount");
-        
-        // thêm tài khoản của hành khách vào danh sách hành khách của chuyến
-        rides[_rideId].passengers.push(msg.sender);
-        rides[_rideId].numOfPassengers ++ ; 
-
-       
-        // Thêm chuyến xe vào danh sách chuyến đi đã tham gia của hành khách
-        joinedRides[msg.sender].push(_rideId);
-        
-
-
     }
 
     //Một hành khách huỷ chuyến đi 
@@ -304,6 +246,70 @@ contract RideContract {
 
     }
 
+    //Phần dưới không quan trọng
+    // Chưa cần dùng
+    // Hàm sinh mã xác nhận ngẫu nhiên
+    function generateVerificationCode() private view returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % 9000 + 1000;
+    }
+    
+    //2. Hàm tài xế chấp nhận hành khách và tạo mã xác nhận
+    // function acceptPassenger(uint _rideId, address _passenger) public {
+    //     Passenger storage passenger = pendingPassengers[_passenger][_rideId];
+    //     require(!passenger.accepted, "Passenger already accepted");
+    //     passenger.verificationCode = generateVerificationCode();
+    //     passenger.accepted = true;
+    // }
+    //3. Driver từ chối hành khách
+    // function rejectPendingPassenger(uint _rideId, address payable _passenger) public {
+    //     // Kiểm tra xem người gọi hàm có phải là tài xế của chuyến đi không
+    //     require(msg.sender == rides[_rideId].driver, "Only driver can reject pending passenger");
+
+    //     // Kiểm tra xem hành khách có tồn tại trong danh sách hàng đợi không
+    //     require(pendingPassengers[_passenger][_rideId].id == _rideId, "Passenger not found in pending list");
+
+    //     // Hoàn trả tiền đã gửi của hành khách
+    //     uint256 fareAmount = pendingPassengers[_passenger][_rideId].numOfPeople * rides[_rideId].fare * 1e18;
+    //    withdrawFunds(_passenger, fareAmount);
+
+    //     // Xóa hành khách khỏi danh sách hàng đợi
+    //     delete pendingPassengers[_passenger][_rideId];
+    // }
+
+    //4. Hàm hành khách nhập mã xác nhận và tham gia chuyến đi
+    // function enterVerificationCode(uint _rideId, uint256 _verificationCode) public {
+    //     Passenger storage passenger = pendingPassengers[msg.sender][_rideId];
+    //     require(passenger.accepted, "Passenger not accepted yet");
+    //     require(passenger.verificationCode == _verificationCode, "Incorrect verification code");
+    //     // Thêm hành khách vào danh sách của chuyến đi
+    //     addPassenger(_rideId, passenger.phoneNumber, passenger.numOfPeople);
+    //     // Xóa thông tin hành khách khỏi danh sách pending
+    //     delete pendingPassengers[msg.sender][_rideId];
+    // }
+
+    
+    // Hàm này bỏ
+    //khi người dùng nhấn join vào chuyến có thể đi
+    function joinRide(uint256 _rideId) external payable {
+        require(_rideId <= rideCount, "Invalid ride ID");
+        require(msg.sender != rides[_rideId].driver, "Join Ride: This is driver address, the ride need a passenger join");
+        //kiểm tra nếu còn đủ chỗ để thêm hành khách vapf 
+        require(rides[_rideId].numOfPassengers < rides[_rideId].numOfSeats, "");
+        require(msg.value == rides[_rideId].fare*1e18, "Incorrect fare amount");
+        
+        // thêm tài khoản của hành khách vào danh sách hành khách của chuyến
+        rides[_rideId].passengers.push(msg.sender);
+        rides[_rideId].numOfPassengers ++ ; 
+
+       
+        // Thêm chuyến xe vào danh sách chuyến đi đã tham gia của hành khách
+        joinedRides[msg.sender].push(_rideId);
+        
+
+
+    }
+
+    
 
     
     function getPassengers(uint rideId) external view returns (address payable[] memory) {
