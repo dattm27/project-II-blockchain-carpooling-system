@@ -42,7 +42,8 @@ contract RideContract {
     event PassengerCancelled(uint indexed rideId, address indexed passenger);
     event RideCompleted(uint indexed rideId, address indexed driver);
     event PassengerArrived(uint indexed rideId, address indexed passenger);
-   
+    event PassengerAccepted(uint indexed rideId, address indexed passenger);
+    event PassengerDeclined(uint indexed rideId, address indexed passenger);
 
 
     constructor() public {
@@ -138,6 +139,7 @@ contract RideContract {
         pendingPassengers[_rideId][_passengerIndex] = pendingPassengers[_rideId][pendingPassengers[_rideId].length - 1];
         // Giảm độ dài của mảng đi một
         pendingPassengers[_rideId].pop();
+        emit PassengerAccepted(_rideId, passenger.addr);
     }
 
     //từ chối một khách -> trả phí luôn cho người ta, xoá khỏi danh sách chờ
@@ -154,6 +156,7 @@ contract RideContract {
         pendingPassengers[_rideId][_passengerIndex] = pendingPassengers[_rideId][pendingPassengers[_rideId].length - 1];
         // Giảm độ dài của mảng đi một
         pendingPassengers[_rideId].pop();
+        emit PassengerDeclined(_rideId, passenger.addr);
   
         
     }
@@ -179,7 +182,7 @@ contract RideContract {
         // Xoá chuyến đi khỏi danh sách tham gia
         removeRideFromList(joinedRides[msg.sender], _rideId);
 
-
+        
 
     }
     //khi chuyến đi kết thúc, tài xế thực hiện lấy tiền của hành khách
