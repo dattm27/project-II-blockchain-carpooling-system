@@ -2,7 +2,7 @@
 
 import Web3 from 'web3';
 import RideContract from './contracts/RideContract.json';
-
+import {ethers} from "ethers"
 const web3 = new Web3(window.ethereum);
 const contractAddress = '0xD2374689F1fdaE4c2327020CBf55Cb16936f5061';
 const contractABI = RideContract.abi;
@@ -13,7 +13,7 @@ const contract =new web3.eth.Contract(
   RideContract.abi,
   deployedNetwork && deployedNetwork.address
 );
-// console.log(deployedNetwork);
+console.log('contract address',deployedNetwork.address);
 export const getCreatedRides = async (account) => {
   try {
     const createdRides = await contract.methods.getCreatedRides(account).call();
@@ -27,7 +27,7 @@ export const getCreatedRides = async (account) => {
 export const getJoinedRides = async (account) => {
   try {
     const joinedRides = await contract.methods.getJoinedRides(account).call();
-    console.log(joinedRides);
+   // console.log(joinedRides);
     return joinedRides;
   } catch (error) {
     console.error('Error fetching joined rides:', error);
@@ -241,7 +241,7 @@ export const checkPassengerInPendings = async (account, _rideId) => {
   try {
     const isPending = await contract.methods.isPassengerInPendingList(_rideId, account).call();
     console.log('isPending',isPending);
-    if (isPending != 0) return true;
+    if (isPending !== 0) return true;
     return false;
 
   }
@@ -255,7 +255,7 @@ export const checkPassengerInList= async (account, _rideId) => {
   try {
     const isPassenger = await contract.methods.isPassengerInList(_rideId, account).call();
     console.log('isPassenger',isPassenger);
-    if (isPassenger != 0) return true;
+    if (isPassenger !== 0) return true;
     return false;
 
   }
@@ -267,20 +267,24 @@ export const checkPassengerInList= async (account, _rideId) => {
 //các hàm lắng nghe sự kiện để update front-end
 
 // Lắng nghe sự kiện khi một chuyến đi được tạo
-export const listenToRideCreatedEvent = () => {
-  contract.events.RideCreated((error, event) => {
-      if (!error) {
-          console.log('Ride created:', event.returnValues);
-          // Xử lý sự kiện ở đây
-      } else {
-          console.error('Error listening to RideCreated event:', error);
-      }
-  });
+export const listenToRideCreatedEvent = async () => {
+  console.log('listener added');
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const signer = await provider.getSigner();
+  //console.log('signer', signer);
+ let subContract = new ethers.Contract(deployedNetwork.address, RideContract.abi,signer);
+ //console.log(subContract);
+  return subContract.on("RideCreated", (rideId, driver, startPoint, endPoint, fare, startTime,numOfSeats)=>{
+    console.log('event emitted');
+  } )
 };
 
 // Lắng nghe sự kiện khi một hành khách tham gia chuyến đi
 export const listenToPassengerJoinedEvent = () => {
-  contract.events.PassengerJoined((error, event) => {
+
+ 
+
+  return contract.events.PassengerJoined((error, event) => {
       if (!error) {
           console.log('Passenger joined:', event.returnValues);
           // Xử lý sự kiện ở đây
@@ -292,6 +296,7 @@ export const listenToPassengerJoinedEvent = () => {
 
 // Lắng nghe sự kiện khi một hành khách hủy chuyến đi
 export const listenToPassengerCancelledEvent = () => {
+  
   contract.events.PassengerCancelled((error, event) => {
       if (!error) {
           console.log('Passenger cancelled:', event.returnValues);
@@ -300,6 +305,7 @@ export const listenToPassengerCancelledEvent = () => {
           console.error('Error listening to PassengerCancelled event:', error);
       }
   });
+
 };
 
 // Lắng nghe sự kiện khi một chuyến đi được hoàn thành

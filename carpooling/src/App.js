@@ -34,10 +34,12 @@ function App() {
     //kiem tra MetaMask ton tai khong
     if (typeof window.ethereum !=="undefined"){
       await requestAccount ();
-      const web3 = new Web3(window.ethereum);
-      const provider = new Web3(web3.currentProvider);
+     
+
     } 
   }
+
+ 
   useEffect (() => {
     //the code that we want to run
     //console.log("Login account" , walletAddress);
@@ -55,7 +57,7 @@ function App() {
      
       {/* Kiểm tra kết nối ví điện tử và đăng nhập tài khoản */}
       {/* {walletAddress!=="" ?  (<Home walletAddress={walletAddress} />) : (<Welcome connectWallet={connectWallet}/>) } */}
-       {walletAddress=="" &&<div>
+       {walletAddress==="" &&<div>
           <header className="App-header">
             <img src={logo} className="App-logo" alt="logo" />
         

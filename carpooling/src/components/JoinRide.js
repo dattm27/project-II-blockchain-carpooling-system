@@ -1,8 +1,9 @@
 // JoinRide.js
 
 import React, { useState, useEffect } from 'react';
-import { getAvailableRides, joinPendingRide } from '../api';
+import { getAvailableRides, joinPendingRide, listenToRideCreatedEvent } from '../api';
 import { Card, Button, Modal, Form } from 'react-bootstrap';
+
 
 const JoinRide = ({ account, handleTabChange }) => {
     const [show, setShow] = useState(false);
@@ -22,7 +23,10 @@ const JoinRide = ({ account, handleTabChange }) => {
     const handleShow = async() => setShow(true);
 
     useEffect(() => {
+        
+   
         const fetchAvailableRides = async () => {
+            
             try {
                 //lấy ra các chuyến xe available
                // console.log('join account', account);
@@ -33,9 +37,11 @@ const JoinRide = ({ account, handleTabChange }) => {
                 console.error('Error fetching available rides:', error);
             }
         };
-
+        
         fetchAvailableRides();
-    }, []);
+        listenToRideCreatedEvent();
+       
+    }, [account]);
 
     const handleJoinRide = async() => {
         // Xử lý logic khi người dùng tham gia chuyến đi
