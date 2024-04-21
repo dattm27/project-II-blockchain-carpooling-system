@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getPendingPassengers, acceptPassenger, getPassenger, completeRide, getRideDetails, declinePassenger } from '../api';
+import { getPendingPassengers, acceptPassenger, getPassenger, completeRide, getRideDetails, declinePassenger, getEventListener } from '../api';
 import { Table, Button } from 'react-bootstrap';
 
 const ProcessRide = ({account, rideId , handleTabChange}) => {
@@ -12,16 +12,30 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
         const pending = await getPendingPassengers(rideId);
         const accepted = await getPassenger(rideId);
         const ride  = await getRideDetails(rideId);
-        console.log(ride);
+        // console.log(ride);
         setPendingPassengers(pending);
         setAcceptedPassengers(accepted);
         setRideStatus(ride.isActive.toString());
-        console.log(rideStatus);
+        //console.log(rideStatus);
       } catch (error) {
         console.error('Error fetching pending passengers:', error);
       }
     };
+    // lắng nghe sự kiện có người join, hoặc được accept, hoặc bị từ chối
+    const listenToEvent = async() =>{
+      console.log('PassengerArrived listener added');
+      const listener = await getEventListener();
+      listener.on("PassengerArrived", (_rideId, passenger)=>{
+          let data = {_rideId, passenger};
+          console.log(data);
+          
+          console.log('PassengerArrived event emitted');
+          if(rideId ===_rideId) fetchData();
+          
+      }); 
+    }
     fetchData();
+    listenToEvent();
   }, [rideId,rideStatus]);
 
   const handleAccept = async (index) => {
@@ -54,6 +68,7 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
       console.log('id' + rideId);
       await completeRide(rideId, account);
       setRideStatus('false');
+      handleTabChange('home');
     }
     catch (error){
       console.error('Failed to complete ride');
@@ -110,7 +125,7 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
               <tr>
                 <th>Phone Number</th>
                 <th>Number of People</th>
-                <th>Action</th>
+                <th>Status</th>
               </tr>
             </thead>
             <tbody>
@@ -119,7 +134,7 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
                   <td>{passenger.phoneNumber}</td>
                   <td>{passenger.numOfPeople.toString()}</td>
                   <td>
-                    {/* Thêm nút hoặc hành động cho danh sách hành khách đã chấp nhận (nếu cần) */}
+                    {passenger.arrived ? 'Arrived' : 'On ride'}
                   </td>
                 </tr>
               ))}

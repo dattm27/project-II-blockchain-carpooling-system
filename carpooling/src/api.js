@@ -191,7 +191,7 @@ export const completeRide = async (_rideId, account) => {
    
     await contract.methods.completeRide(_rideId).send({ from: account});
     console.log('Ride completed');
-    alert('Join Completed');
+
   }
   catch (error) {
     throw new Error('Error when completing ride ' + error.message);
@@ -203,7 +203,8 @@ export const confirmDeclined = async (_rideId, account) => {
   try {
     await contract.methods.confirmDeclined(_rideId).send({from: account});
   }catch(error) {
-    throw new Error ('Error when confirming decline', error.message);
+    console.log(error.message);
+    throw new Error ('Error when confirming decline');
   }
 }
 //Lấy ra số lượng pending của một chuyến đi 
@@ -241,7 +242,7 @@ export const checkPassengerInPendings = async (account, _rideId) => {
   try {
     const isPending = await contract.methods.isPassengerInPendingList(_rideId, account).call();
     console.log('isPending',isPending);
-    if (isPending !== 0) return true;
+    if (isPending != 0) return true;
     return false;
 
   }
@@ -255,7 +256,7 @@ export const checkPassengerInList= async (account, _rideId) => {
   try {
     const isPassenger = await contract.methods.isPassengerInList(_rideId, account).call();
     console.log('isPassenger',isPassenger);
-    if (isPassenger !== 0) return true;
+    if (isPassenger !=0) return true;
     return false;
 
   }
@@ -272,12 +273,21 @@ export const listenToRideCreatedEvent = async () => {
   const provider = new ethers.BrowserProvider(window.ethereum);
   const signer = await provider.getSigner();
   //console.log('signer', signer);
- let subContract = new ethers.Contract(deployedNetwork.address, RideContract.abi,signer);
+  let subContract = new ethers.Contract(deployedNetwork.address, RideContract.abi,signer);
  //console.log(subContract);
   return subContract.on("RideCreated", (rideId, driver, startPoint, endPoint, fare, startTime,numOfSeats)=>{
     console.log('event emitted');
   } )
 };
+
+export const getEventListener = async() =>{
+  console.log('listener added');
+  const provider = new ethers.BrowserProvider(window.ethereum);
+  const signer = await provider.getSigner();
+  //console.log('signer', signer);
+  let subContract = new ethers.Contract(deployedNetwork.address, RideContract.abi,signer);
+  return subContract;
+}
 
 // Lắng nghe sự kiện khi một hành khách tham gia chuyến đi
 export const listenToPassengerJoinedEvent = () => {

@@ -1,7 +1,7 @@
 // JoinRide.js
 
 import React, { useState, useEffect } from 'react';
-import { getAvailableRides, joinPendingRide, listenToRideCreatedEvent } from '../api';
+import { getAvailableRides, joinPendingRide, getEventListener} from '../api';
 import { Card, Button, Modal, Form } from 'react-bootstrap';
 
 
@@ -37,9 +37,19 @@ const JoinRide = ({ account, handleTabChange }) => {
                 console.error('Error fetching available rides:', error);
             }
         };
-        
+
+        const listenToEvent = async() =>{
+            const listener = await getEventListener();
+            listener.on("RideCreated", (rideId, driver, startPoint, endPoint, fare, startTime,numOfSeats)=>{
+                console.log('RideCreated event emitted');
+                fetchAvailableRides();
+            }); 
+        }
+        listenToEvent();
         fetchAvailableRides();
-        listenToRideCreatedEvent();
+       
+
+        
        
     }, [account]);
 
@@ -109,7 +119,7 @@ const JoinRide = ({ account, handleTabChange }) => {
             {/* Danh sách các chuyến đi sẵn sàng */}
             <div className="d-flex flex-wrap justify-content-center">
                {availableRides.length > 0 ? (
-                    availableRides.map((ride, index) => (
+                    availableRides.slice().reverse().map((ride, index) => (
                         <Card key={index} style={{ width: '28rem', margin: '5px' }}>
                             <Card.Body className="d-flex justify-content-between align-items-center">
                                 <div>

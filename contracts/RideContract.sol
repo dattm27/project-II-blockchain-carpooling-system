@@ -38,7 +38,7 @@ contract RideContract {
     mapping(uint => uint) public numOfPendings; // số lượng pending của mỗi chuyến
 
     event RideCreated(uint indexed rideId, address indexed driver, string startPoint, string endPoint, uint256 fare, uint256 startTime, uint numOfSeats);
-    event PassengerJoined(uint indexed rideId, address indexed passenger, string phoneNumber, uint numOfPeople);
+    event PassengerJoined(uint indexed rideId, address indexed passenger, string phoneNumber, uint numOfPeople, address indexed driver);
     event PassengerCancelled(uint indexed rideId, address indexed passenger);
     event RideCompleted(uint indexed rideId, address indexed driver);
     event PassengerArrived(uint indexed rideId, address indexed passenger);
@@ -117,7 +117,7 @@ contract RideContract {
        
         //Them chuyen xe vao danh sach chuyen xe da tham gia
         joinedRides[msg.sender].push(_rideId);
-        emit PassengerJoined(_rideId, msg.sender, _phoneNumber, _numberOfPeople);
+        emit PassengerJoined(_rideId, msg.sender, _phoneNumber, _numberOfPeople,rides[_rideId].driver);
     }
   
     //chấp nhận một hành khách vào chuyến -> chuyển từ pending lên danh sách passengers
@@ -182,7 +182,7 @@ contract RideContract {
         // Xoá chuyến đi khỏi danh sách tham gia
         removeRideFromList(joinedRides[msg.sender], _rideId);
 
-        
+
 
     }
     //khi chuyến đi kết thúc, tài xế thực hiện lấy tiền của hành khách
@@ -224,7 +224,7 @@ contract RideContract {
 
     }
     //Khách hàng confirm là đã bị declined -> xoá khỏi danh sách đã tham gia
-    function comfirmDeclined(uint _rideId) external {
+    function confirmDeclined(uint _rideId) external {
         removeRideFromList(joinedRides[msg.sender], _rideId);
     }
     //Một hành khách arrive 
