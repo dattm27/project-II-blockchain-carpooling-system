@@ -225,7 +225,7 @@ export const arrivedRide = async( _rideId, account) =>{
     throw new Error('Error when arrive Ride');
   }
 }
-
+//lấy lịch sử đi xe của một hành khách (bao gồm cả các chuyên đã tạo và các chuyến đã tham gia)
 export const getRideHistory = async (account) => {
   try {
     const history = await contract.methods.getHistory(account).call();
@@ -236,7 +236,7 @@ export const getRideHistory = async (account) => {
   }
 };
 
-
+//kiểm tra một hành khách ở trong danh sách pendings 
 export const checkPassengerInPendings = async (account, _rideId) => {
   try {
     const isPending = await contract.methods.isPassengerInPendingList(_rideId, account).call();
@@ -250,7 +250,7 @@ export const checkPassengerInPendings = async (account, _rideId) => {
   }
 }
 
-
+//check một tài khoản đã có trong danh sách hành khách của mmootj chuyến xe chưa
 export const checkPassengerInList= async (account, _rideId) => {
   try {
     const isPassenger = await contract.methods.isPassengerInList(_rideId, account).call();
@@ -263,3 +263,65 @@ export const checkPassengerInList= async (account, _rideId) => {
     console.log('Error when checking passenger list: ' + error.message);
   }
 }
+
+//các hàm lắng nghe sự kiện để update front-end
+
+// Lắng nghe sự kiện khi một chuyến đi được tạo
+export const listenToRideCreatedEvent = () => {
+  contract.events.RideCreated((error, event) => {
+      if (!error) {
+          console.log('Ride created:', event.returnValues);
+          // Xử lý sự kiện ở đây
+      } else {
+          console.error('Error listening to RideCreated event:', error);
+      }
+  });
+};
+
+// Lắng nghe sự kiện khi một hành khách tham gia chuyến đi
+export const listenToPassengerJoinedEvent = () => {
+  contract.events.PassengerJoined((error, event) => {
+      if (!error) {
+          console.log('Passenger joined:', event.returnValues);
+          // Xử lý sự kiện ở đây
+      } else {
+          console.error('Error listening to PassengerJoined event:', error);
+      }
+  });
+};
+
+// Lắng nghe sự kiện khi một hành khách hủy chuyến đi
+export const listenToPassengerCancelledEvent = () => {
+  contract.events.PassengerCancelled((error, event) => {
+      if (!error) {
+          console.log('Passenger cancelled:', event.returnValues);
+          // Xử lý sự kiện ở đây
+      } else {
+          console.error('Error listening to PassengerCancelled event:', error);
+      }
+  });
+};
+
+// Lắng nghe sự kiện khi một chuyến đi được hoàn thành
+export const listenToRideCompletedEvent = () => {
+  contract.events.RideCompleted((error, event) => {
+      if (!error) {
+          console.log('Ride completed:', event.returnValues);
+          // Xử lý sự kiện ở đây
+      } else {
+          console.error('Error listening to RideCompleted event:', error);
+      }
+  });
+};
+
+// Lắng nghe sự kiện khi một hành khách đến đích
+export const listenToPassengerArrivedEvent = () => {
+  contract.events.PassengerArrived((error, event) => {
+      if (!error) {
+          console.log('Passenger arrived:', event.returnValues);
+          // Xử lý sự kiện ở đây
+      } else {
+          console.error('Error listening to PassengerArrived event:', error);
+      }
+  });
+};
