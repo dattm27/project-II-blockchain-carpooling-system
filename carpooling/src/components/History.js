@@ -9,7 +9,7 @@ const RideHistory = ({ account }) => {
         const fetchRideHistory = async () => {
             try {
                 // Gọi hàm API để lấy lịch sử chuyến đi dựa trên tài khoản của người dùng
-                const history = await getRideHistory(account);
+                const history = await getRideHistory(account.toLowerCase());
                 setRideHistory(history);
                 const historyRideDetails = await Promise.all(history.map(async (rideId) => {
                     const rideDetails = await getRideDetails(rideId);

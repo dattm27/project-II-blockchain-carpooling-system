@@ -3,7 +3,7 @@
 pragma solidity ^0.5.0;
 contract RideContract {
     uint public rideCount;
-    
+    uint public balanceChangeCounter;
 
     struct Ride {
         uint id; 
@@ -29,6 +29,17 @@ contract RideContract {
 
     }
 
+    // Cấu trúc dữ liệu cho một sự thay đổi số dư
+    struct BalanceChange {
+        address user;           // Người dùng ảnh hưởng
+        int256 amount;          // Số dư thay đổi (có thể là dương hoặc âm)
+        int256 balanceBefore;   // Số dư trước khi thay đổi
+        int256 balanceAfter;    // Số dư sau khi thay đổi
+        uint256 timestamp;      // Thời gian xảy ra sự thay đổi
+        string description;     // Mô tả ngắn về sự thay đổi
+    }
+
+
     mapping(address => uint[]) private createdRides; // Lưu trữ danh sách các chuyến đi đã được tạo bởi mỗi tài xế
     mapping(address => uint[]) private joinedRides; // Lưu trữ danh sách các chuyến đi đã tham gia của mỗi hành khách
     mapping(address => uint[]) private history;
@@ -36,6 +47,13 @@ contract RideContract {
     mapping(uint =>  Passenger []) public passengers;
     mapping(uint => Passenger[]) public pendingPassengers;
     mapping(uint => uint) public numOfPendings; // số lượng pending của mỗi chuyến
+    // Mapping từng địa chỉ tài khoản đến lịch sử các sự thay đổi số dư
+    mapping(address => uint[]) public balanceChangeHistory;
+    mapping (uint => BalanceChange) public balanceChanges;
+    // Mapping từng địa chỉ tài khoản đến số dư
+    
+    mapping(address => int256) public balances;
+
 
     event RideCreated(uint indexed rideId, address indexed driver, string startPoint, string endPoint, uint256 fare, uint256 startTime, uint numOfSeats);
     event PassengerJoined(uint indexed rideId, address indexed passenger, string phoneNumber, uint numOfPeople, address indexed driver);
@@ -44,11 +62,15 @@ contract RideContract {
     event PassengerArrived(uint indexed rideId, address indexed passenger);
     event PassengerAccepted(uint indexed rideId, address indexed passenger);
     event PassengerDeclined(uint indexed rideId, address indexed passenger);
+    // Khai báo sự kiện
+    event BalanceChanged(address indexed account, int256 amount);
+
 
 
     constructor() public {
         // createRide("Start Point", "End Point", 100); // Tạo một chuyến xe mẫu khi khởi tạo
         rideCount = 0;
+        balanceChangeCounter = 0;
        
        
     }
@@ -67,18 +89,24 @@ contract RideContract {
         Ride memory ride = rides[_rideId];
         return (ride.startPoint, ride.endPoint, ride.fare, ride.startTime, ride.isActive, ride.numOfSeats, ride.numOfPassengers);
     }
-    // Hàm trả về danh sách các chuyến đi đã được tạo bởi một tài xế cụ thể
+    // // Hàm trả về danh sách các chuyến đi đã được tạo bởi một tài xế cụ thể
     function getHistory(address _account) external view returns (uint[] memory) {
         return history[_account];
     }
-    // hàm hoàn tiền về cho hành khách khi bị huỷ 
-    function withdrawFunds(address payable _receiver, uint256 _amount) internal {
-    (bool success, ) = _receiver.call.value(_amount)("");
-    require(success, "Transfer failed.");
+
+     // Hàm trả về danh sách biến động số dư của một tài khoản
+    function getBalanceChangeHistory(address _address) external view returns (uint[] memory) {
+        return balanceChangeHistory[_address];
     }
 
+    // // hàm hoàn tiền về cho hành khách khi bị huỷ 
+    // function withdrawFunds(address payable _receiver, uint256 _amount) internal {
+    // (bool success, ) = _receiver.call.value(_amount)("");
+    // require(success, "Transfer failed.");
+    // }
+
     // Đầu tiên, driver tạo chuyến đi mới
-    function createRide(string calldata _startPoint, string calldata _endPoint, uint256 _fare, uint256 _startTime, uint _numOfSeats) external {
+    function createRide(string calldata _startPoint, string calldata _endPoint, uint256 _fare, uint256 _startTime, uint _numOfSeats, int256 balance) external {
         require(_fare > 0, "Fare must be greater than zero");
         rideCount++; // Tăng số lượng chuyến xe
 
@@ -102,9 +130,11 @@ contract RideContract {
         numOfPendings[rideCount] = 0;
         emit RideCreated(newRide.id, msg.sender, newRide.startPoint, newRide.endPoint, newRide.fare, newRide.startTime, newRide.numOfSeats);
 
+        //thêm thông tin số dư vào
+        balances[msg.sender] = balance;
     }
     // Hành khách tìm kiếm một chuyến xe -> join vào pending chờ tài xế chấp nhận (lúc join vào hành khách thanh toán luôn)
-    function joinPendingRide(uint _rideId, string memory _phoneNumber, uint256 _numberOfPeople) public payable{
+    function joinPendingRide(uint _rideId, string memory _phoneNumber, uint256 _numberOfPeople, int256 balance) public payable{
         require(_rideId <= rideCount, "Invalid ride ID");
         require(msg.sender != rides[_rideId].driver, "Join Ride: This is driver address, the ride need a passenger join");
         //kiểm tra nếu còn đủ chỗ để thêm hành khách vào pending
@@ -118,6 +148,10 @@ contract RideContract {
         //Them chuyen xe vao danh sach chuyen xe da tham gia
         joinedRides[msg.sender].push(_rideId);
         emit PassengerJoined(_rideId, msg.sender, _phoneNumber, _numberOfPeople,rides[_rideId].driver);
+        addBalanceChange(msg.sender, -int256(msg.value), "Request for joining ride");
+
+          //thêm thông tin số dư vào
+        balances[msg.sender] = balance;
     }
   
     //chấp nhận một hành khách vào chuyến -> chuyển từ pending lên danh sách passengers
@@ -149,7 +183,10 @@ contract RideContract {
         //hoàn lại tiền cho hành khách đó
         Passenger memory passenger = pendingPassengers[_rideId][_passengerIndex];
         address payable passengerAddr = passenger.addr;
-        passengerAddr.transfer(passenger.numOfPeople*rides[_rideId].fare*1e18);
+        uint totalFare = passenger.numOfPeople*rides[_rideId].fare*1e18;
+        passengerAddr.transfer(totalFare);
+         //thêm vào lịch sử biến động số dư
+        addBalanceChange(passengerAddr, int256(totalFare), "Joining request declined");
         //xoá hành khách đó khỏi pendings
         numOfPendings[_rideId]--;
         // Gán giá trị của phần tử cần xóa bằng giá trị của phần tử cuối cùng trong mảng
@@ -167,10 +204,12 @@ contract RideContract {
         uint pendingPassengerId = isPassengerInPendingList(_rideId, _pendingPassenger);
         require(pendingPassengerId != uint(0), "Passenger is not in the pending list "); 
          //trả lại tiền cho hành khách đó
-        (msg.sender).transfer(rides[_rideId].fare*pendingPassengers[_rideId][pendingPassengerId-1].numOfPeople*1e18);
-        //xoá hành khách đó khỏi danh sách pendings và join
-      
-       
+         uint256  totalFare = rides[_rideId].fare*pendingPassengers[_rideId][pendingPassengerId-1].numOfPeople*1e18;
+        (msg.sender).transfer(totalFare);
+        
+        //thêm vào lịch sử biến động số dư
+        addBalanceChange(msg.sender, int256(totalFare), "Cancel ride joining request");
+       //phát sự kiện hành khách huỷ chuyến
         emit PassengerCancelled(_rideId, msg.sender);
          //xoá hành khách đó khỏi pendings
         numOfPendings[_rideId]--;
@@ -204,20 +243,39 @@ contract RideContract {
         for (uint i = 0; i < ride.passengers.length; i++) {
            if (passengers[_rideId][i].arrived) numOfArrivals +=passengers[_rideId][i].numOfPeople ;
            else {
-                // Hoàn trả tiền cho hành khách
-                (passengers[_rideId][i].addr).transfer(rides[_rideId].fare*passengers[_rideId][i].numOfPeople*1e18);
+                // Hoàn trả tiền cho hành khách trong chuyến xe nhưng không bấm arrive
+                address payable passengerAddr = passengers[_rideId][i].addr;
+                uint totalFare = rides[_rideId].fare*passengers[_rideId][i].numOfPeople*1e18;
+                passengerAddr.transfer(totalFare);
+                //thêm vào lịch sử biến động số dư
+                addBalanceChange(passengerAddr, int256(totalFare), "Join completed without arrival");
 
            }
            removeRideFromList(joinedRides[passengers[_rideId][i].addr], _rideId);
         }
         // Hoàn tiền cho hành khách còn trong pending
         for(uint i = 0 ; i < pendingPassengers[_rideId].length ; i++){
-            (pendingPassengers[_rideId][i].addr).transfer(pendingPassengers[_rideId][i].numOfPeople*rides[_rideId].fare*1e18);
+            address payable passengerAddr = pendingPassengers[_rideId][i].addr;
+            uint totalFare = pendingPassengers[_rideId][i].numOfPeople*rides[_rideId].fare*1e18;
+            passengerAddr.transfer(totalFare);
+            //thêm vào lịch sử biến động số dư
+            addBalanceChange(passengerAddr, int256(totalFare), "Join completed");
+            //xoá hành khách đó khỏi pendings
+            numOfPendings[_rideId]--;
+            // Gán giá trị của phần tử cần xóa bằng giá trị của phần tử cuối cùng trong mảng
+            pendingPassengers[_rideId][i] = pendingPassengers[_rideId][pendingPassengers[_rideId].length - 1];
+            // Giảm độ dài của mảng đi một
+            pendingPassengers[_rideId].pop();
+            emit PassengerDeclined(_rideId, passengerAddr);
+
         }
 
         uint256 totalFare = ride.fare * numOfArrivals *1e18;
-       
-        msg.sender.transfer(totalFare); // Chuyển số tiền từ hợp đồng về tài khoản của tài xế
+       // Chuyển số tiền từ hợp đồng về tài khoản của tài xế
+        msg.sender.transfer(totalFare); 
+        //Thêm vào biến động số dư
+        addBalanceChange(msg.sender, int256(totalFare), "Withdraw ride fare");
+        
         //Thêm vào lịch sử
         history[msg.sender].push(_rideId);
         emit RideCompleted(_rideId, msg.sender);
@@ -313,8 +371,6 @@ contract RideContract {
     }
 
     
-
-    
     function getPassengers(uint rideId) external view returns (address payable[] memory) {
         require(rideId <= rideCount, "Invalid ride ID");
         return rides[rideId].passengers;
@@ -353,5 +409,26 @@ contract RideContract {
         }
         return uint(0); // Hành khách chưa nằm trong danh sách pending
     }
+
+    // Hàm để thêm lịch sử thay đổi số dư
+    function addBalanceChange(address _user, int256 _amount, string memory _description) internal {
+        // Thêm số tiền đã thay đổi vào số dư của tài khoản
+        balances[_user] += _amount;
+        
+        balanceChangeCounter ++;
+        // Ghi lại lịch sử thay đổi số dư
+        balanceChangeHistory[_user].push(balanceChangeCounter);
+        balanceChanges[balanceChangeCounter] =  BalanceChange({
+            user: _user,
+            amount: _amount,
+            balanceBefore: balances[_user] - _amount,
+            balanceAfter: balances[_user],
+            timestamp: block.timestamp,
+            description: _description
+           
+        });
+        emit BalanceChanged(_user, _amount);
+    }
+    
     
 }

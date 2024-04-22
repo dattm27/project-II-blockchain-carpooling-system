@@ -32,11 +32,12 @@ function App() {
   //ket noi voi tai khoan MetaMask
   async function connectWallet () {
     //kiem tra MetaMask ton tai khong
-    if (typeof window.ethereum !=="undefined"){
-      await requestAccount ();
+    // if (typeof window.ethereum !=="undefined"){
+      
      
 
-    } 
+    // } 
+    await requestAccount ();
   }
 
  

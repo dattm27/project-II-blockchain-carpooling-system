@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import RideContract from '../contracts/RideContract.json';
 import Web3 from 'web3';
 import { Modal, Button } from 'react-bootstrap'; // Import Modal và các thành phần khác từ React Bootstrap
+import { createRide } from '../api';
 
 function CreateRide({handleTabChange} ) {
   const [startPoint, setStartPoint] = useState('');
@@ -29,19 +30,19 @@ function CreateRide({handleTabChange} ) {
     }
     try {
       
-      const  web3 = new Web3(window.ethereum);
-      const accounts = await web3.eth.getAccounts();
-      const networkId = await web3.eth.net.getId();
-      const deployedNetwork = RideContract.networks[networkId];
-      const contract = new web3.eth.Contract(
-        RideContract.abi,
-        deployedNetwork && deployedNetwork.address
-      );
+      // const  web3 = new Web3(window.ethereum);
+      // const accounts = await web3.eth.getAccounts();
+      // const networkId = await web3.eth.net.getId();
+      // const deployedNetwork = RideContract.networks[networkId];
+      // const contract = new web3.eth.Contract(
+      //   RideContract.abi,
+      //   deployedNetwork && deployedNetwork.address
+      // );
 
       // Convert the start date and time to Unix timestamp
       const startTimeUnix = Math.floor(new Date(startTime).getTime() / 1000);
 
-      await contract.methods.createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats).send({ from: accounts[0] });
+      await createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats);
       setShowSuccessModal(true); // Hiển thị modal thông báo thành công
      
     } catch (error) {

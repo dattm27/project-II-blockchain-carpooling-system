@@ -33,6 +33,20 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
           if(rideId ===_rideId) fetchData();
           
       }); 
+      console.log('PassengerJoined listener added');
+      listener.on("PassengerJoined", (_rideId, passenger, phoneNumber, numOfPeople, driver) => {
+        let data={driver};
+        //console.log('driver', data, 'account', account);
+        console.log('PassengerJoined event emitted');
+        if(rideId ===_rideId) fetchData();
+      })
+      console.log('PassengerCancelled listener added');
+      listener.on("PassengerCancelled", (_rideId, _passenger) => {
+        //let data={driver};
+        //console.log('driver', data, 'account', account);
+        console.log('PassengerJoined event emitted');
+        if(rideId ===_rideId) fetchData();
+      })
     }
     fetchData();
     listenToEvent();

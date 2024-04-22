@@ -5,6 +5,7 @@ import YourRides from './YourRides';
 import JoinRide from './JoinRide';
 import ProcessRide from './ProcessRide';
 import RideHistory from './History';
+import Balance from './Balance';
 function Home({walletAddress})  {
     //properties
     const [activeTab, setActiveTab] = useState('home');
@@ -40,10 +41,13 @@ function Home({walletAddress})  {
                         <Nav.Link eventKey="join">Join Ride</Nav.Link>
                       </Nav.Item>
                       <Nav.Item>
-                        <Nav.Link eventKey="history">History</Nav.Link>
+                        <Nav.Link eventKey="history">Ride History</Nav.Link>
                       </Nav.Item>
                       <Nav.Item>
-                        <Nav.Link eventKey="history">Account</Nav.Link>
+                        <Nav.Link eventKey="balance">Balance History</Nav.Link>
+                      </Nav.Item>
+                      <Nav.Item>
+                        <Nav.Link eventKey="balance">Account</Nav.Link>
                       </Nav.Item>
                     </Nav>
                   </Navbar.Collapse>
@@ -72,6 +76,11 @@ function Home({walletAddress})  {
               {activeTab === 'process' && selectedRideId && (
                 <ProcessRide account ={walletAddress} rideId={selectedRideId}  handleTabChange={handleSelect}/>
               )} 
+              {activeTab === 'balance' && (
+                <div>
+                 <Balance account={ walletAddress}/>
+                </div>
+              )}
         </div>
     )
 }

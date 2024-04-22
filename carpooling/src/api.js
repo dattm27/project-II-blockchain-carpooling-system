@@ -9,11 +9,25 @@ const contractABI = RideContract.abi;
 const networkId = await web3.eth.net.getId();
 const deployedNetwork = await RideContract.networks[networkId];
 const accounts = await web3.eth.getAccounts();
+const currentAccount = accounts[0];
 const contract =new web3.eth.Contract(
   RideContract.abi,
   deployedNetwork && deployedNetwork.address
 );
 console.log('contract address',deployedNetwork.address);
+
+
+export const createRide = async(startPoint, endPoint, fare, startTimeUnix, numOfSeats) =>{
+  try {
+    const currentBalance = await getCurrentBalance(currentAccount);
+    console.log(currentBalance);
+    await contract.methods.createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats, currentBalance).send({ from: currentAccount});
+  }
+  catch (error){
+    console.log("error when creating ride" + error.message);
+  }
+}
+
 export const getCreatedRides = async (account) => {
   try {
     const createdRides = await contract.methods.getCreatedRides(account).call();
@@ -88,8 +102,11 @@ export const getAvailableRides = async (account) => {
 // Khi người dùng bấm join chuyến và nhập các thông tin
 export const joinPendingRide = async (_rideId, _phoneNumber, _numberOfPeople, account, calculatedValue) => {
   try {
+      //truyền vào số dư tài khoản người gửi
+      const currentBalance = await getCurrentBalance(currentAccount);
+      console.log(currentBalance);
       // Gọi hàm joinPendingRide từ smart contract
-      await contract.methods.joinPendingRide(_rideId, _phoneNumber, _numberOfPeople).send({ from: account, value: calculatedValue*1e18 });
+      await contract.methods.joinPendingRide(_rideId, _phoneNumber, _numberOfPeople, currentAccount).send({ from: account, value: calculatedValue*1e18 });
       // Xử lý sau khi join chuyến thành công
       console.log('Joined ride successfully!');
   } catch (error) {
@@ -103,7 +120,7 @@ export const getPendingPassengers = async (rideId) => {
   try {
       const pendingPassengers = [];
       const numOfPendings =  await contract.methods.numOfPendings(rideId).call();
-      for (let i = 0; i< 3; i++){
+      for (let i = 0; i< numOfPendings; i++){
 
         try{
           const passenger = await contract.methods.pendingPassengers(rideId,i).call();
@@ -265,20 +282,51 @@ export const checkPassengerInList= async (account, _rideId) => {
   }
 }
 
-//các hàm lắng nghe sự kiện để update front-end
+//lấy lịch sử biến động số dư
+export const getBalanceHistory  = async (account) => {
+    // try {
+    //   const history = await contract.methods.balanceChangeHistory(account,1).call();
+    //   return history;
+    // }
+    // catch (error){
+    //   console.log("Error when getting balance history" +  error.message);
+    // }
+    try {
+      const balanceChanges = [];
+      console.log('getting balance history');
+      const balanceChangeIdList = await contract.methods.getBalanceChangeHistory(account).call() ;
+      console.log('Balance chane History list', balanceChangeIdList);
+      for (let i = 0; i< balanceChangeIdList.length; i++){
+       
+        try{
+          
+            
+          const balanceChange =  await contract.methods.balanceChanges(balanceChangeIdList[i]).call();
+          console.log('balancechange' + balanceChange[0]);
+          balanceChanges.push(balanceChange);
+        }
+        catch (error){
+          //Hết pending
+          console.log('Error getting ' + error.message);
+        }
+      }
+      // Trả về danh sách tất cả các hành khách đang chờ
+      return balanceChanges;
+    }catch(error){
+      console.log("Error when getting balance history" +  error.message);
+    }
+}
 
-// Lắng nghe sự kiện khi một chuyến đi được tạo
-export const listenToRideCreatedEvent = async () => {
-  console.log('listener added');
-  const provider = new ethers.BrowserProvider(window.ethereum);
-  const signer = await provider.getSigner();
-  //console.log('signer', signer);
-  let subContract = new ethers.Contract(deployedNetwork.address, RideContract.abi,signer);
- //console.log(subContract);
-  return subContract.on("RideCreated", (rideId, driver, startPoint, endPoint, fare, startTime,numOfSeats)=>{
-    console.log('event emitted');
-  } )
-};
+export const getCurrentBalance = async (account) => {
+  const balance = await window.ethereum.request({
+    method: 'eth_getBalance',
+    params: [account, 'latest'], // Truyền vào địa chỉ tài khoản và block number là 'latest'
+  });
+  const balanceInEther = web3.utils.fromWei(balance, 'ether'); // Chuyển đổi số dư từ wei sang ether
+  return balance;
+}
+
+//các hàm lắng nghe sự kiện để update front-end
 
 export const getEventListener = async() =>{
   console.log('listener added');
@@ -289,55 +337,3 @@ export const getEventListener = async() =>{
   return subContract;
 }
 
-// Lắng nghe sự kiện khi một hành khách tham gia chuyến đi
-export const listenToPassengerJoinedEvent = () => {
-
- 
-
-  return contract.events.PassengerJoined((error, event) => {
-      if (!error) {
-          console.log('Passenger joined:', event.returnValues);
-          // Xử lý sự kiện ở đây
-      } else {
-          console.error('Error listening to PassengerJoined event:', error);
-      }
-  });
-};
-
-// Lắng nghe sự kiện khi một hành khách hủy chuyến đi
-export const listenToPassengerCancelledEvent = () => {
-  
-  contract.events.PassengerCancelled((error, event) => {
-      if (!error) {
-          console.log('Passenger cancelled:', event.returnValues);
-          // Xử lý sự kiện ở đây
-      } else {
-          console.error('Error listening to PassengerCancelled event:', error);
-      }
-  });
-
-};
-
-// Lắng nghe sự kiện khi một chuyến đi được hoàn thành
-export const listenToRideCompletedEvent = () => {
-  contract.events.RideCompleted((error, event) => {
-      if (!error) {
-          console.log('Ride completed:', event.returnValues);
-          // Xử lý sự kiện ở đây
-      } else {
-          console.error('Error listening to RideCompleted event:', error);
-      }
-  });
-};
-
-// Lắng nghe sự kiện khi một hành khách đến đích
-export const listenToPassengerArrivedEvent = () => {
-  contract.events.PassengerArrived((error, event) => {
-      if (!error) {
-          console.log('Passenger arrived:', event.returnValues);
-          // Xử lý sự kiện ở đây
-      } else {
-          console.error('Error listening to PassengerArrived event:', error);
-      }
-  });
-};
