@@ -3,9 +3,19 @@ import RideContract from '../contracts/RideContract.json';
 import Web3 from 'web3';
 import { Modal, Button } from 'react-bootstrap'; // Import Modal và các thành phần khác từ React Bootstrap
 import { createRide } from '../api';
+import MapComponent from './Map';
+import mapboxgl from 'mapbox-gl';
+import Select from 'react-select';
+
+import SearchLocation from './SearchLocation';
+// Thay thế 'your-access-token' bằng access token của bạn
+mapboxgl.accessToken = 'pk.eyJ1IjoiZGF0dG0wMyIsImEiOiJjbHZ3aWs2dmIwZG1pMnFvZ2JzczBxYTZwIn0.f8D93mAehFFbbIhmaH83pA';
+
 
 function CreateRide({handleTabChange} ) {
   const [startPoint, setStartPoint] = useState('');
+  const [startPointOptions, setStartPointOptions] = useState([]);
+  const [endPointOptions, setEndPointOptions] = useState([]);
   const [endPoint, setEndPoint] = useState('');
   const [fare, setFare] = useState(0);
   const [startTime, setStartTime] = useState('');
@@ -19,8 +29,7 @@ function CreateRide({handleTabChange} ) {
     handleTabChange('home'); // Chuyển tab sang "Home"
   };
   const handleClose = () => setShowSuccessModal(false);
-
-
+ 
   const handleCreateRide = async () => {
     // Kiểm tra các trường yêu cầu
     if (!startPoint || !endPoint || !fare || !startTime || !numOfSeats) {
@@ -57,11 +66,14 @@ function CreateRide({handleTabChange} ) {
         <div className="row">
         <div className="col-md-6">
             <label>From:</label>
-            <input type="text" className="form-control" required value={startPoint} onChange={(e) => setStartPoint(e.target.value)} />
+            {/* <input type="text" className="form-control" required value={startPoint} onChange={(e) => setStartPoint(e.target.value)} />  */}
+            <SearchLocation setStartPoint={setStartPoint} />
+
         </div>
         <div className="col-md-6">
             <label>To:</label>
-            <input type="text" className="form-control" required value={endPoint} onChange={(e) => setEndPoint(e.target.value)} />
+            {/* <input type="text" className="form-control" required value={endPoint} onChange={(e) => setEndPoint(e.target.value)} /> */}
+            <SearchLocation setEndPoint={setEndPoint} />
         </div>
         </div>
         <div className="row">
@@ -81,7 +93,7 @@ function CreateRide({handleTabChange} ) {
         </div>
         </div>
         <button className="btn btn-primary mt-3" onClick={handleCreateRide}>Create Ride</button>
-        
+        {/* <SearchLocation/> */}
         <Modal show={showSuccessModal} onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>Ride Created Successfully</Modal.Title>
