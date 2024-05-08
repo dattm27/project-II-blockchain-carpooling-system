@@ -60,7 +60,7 @@ function Home({walletAddress})  {
               )}
               {activeTab === 'create' && (
                 <div className='container'>
-                 <CreateRide  handleTabChange={handleSelect}/>
+                 <CreateRide account ={walletAddress} handleTabChange={handleSelect}/>
                 </div>
               )}
               {activeTab === 'join' && (

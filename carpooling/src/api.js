@@ -9,7 +9,7 @@ const contractABI = RideContract.abi;
 const networkId = await web3.eth.net.getId();
 const deployedNetwork = await RideContract.networks[networkId];
 const accounts = await web3.eth.getAccounts();
-const currentAccount = accounts[0];
+const currentAccount = await accounts[0];
 const contract =new web3.eth.Contract(
   RideContract.abi,
   deployedNetwork && deployedNetwork.address
@@ -17,11 +17,11 @@ const contract =new web3.eth.Contract(
 console.log('contract address',deployedNetwork.address);
 
 
-export const createRide = async(startPoint, endPoint, fare, startTimeUnix, numOfSeats) =>{
+export const createRide = async(startPoint, endPoint, fare, startTimeUnix, numOfSeats, account) =>{
   try {
     const currentBalance = await getCurrentBalance(currentAccount);
     console.log(currentBalance);
-    await contract.methods.createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats, currentBalance).send({ from: currentAccount});
+    await contract.methods.createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats, currentBalance).send({ from: account});
   }
   catch (error){
     console.log("error when creating ride" + error.message);

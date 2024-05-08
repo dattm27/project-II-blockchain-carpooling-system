@@ -12,7 +12,7 @@ import SearchLocation from './SearchLocation';
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGF0dG0wMyIsImEiOiJjbHZ3aWs2dmIwZG1pMnFvZ2JzczBxYTZwIn0.f8D93mAehFFbbIhmaH83pA';
 
 
-function CreateRide({handleTabChange} ) {
+function CreateRide({account, handleTabChange} ) {
   const [startPoint, setStartPoint] = useState('');
   const [startPointOptions, setStartPointOptions] = useState([]);
   const [endPointOptions, setEndPointOptions] = useState([]);
@@ -51,7 +51,7 @@ function CreateRide({handleTabChange} ) {
       // Convert the start date and time to Unix timestamp
       const startTimeUnix = Math.floor(new Date(startTime).getTime() / 1000);
 
-      await createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats);
+      await createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats, account);
       setShowSuccessModal(true); // Hiển thị modal thông báo thành công
      
     } catch (error) {
