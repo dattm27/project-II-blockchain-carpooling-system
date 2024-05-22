@@ -4,6 +4,7 @@ import Web3 from 'web3';
 import { Modal, Button } from 'react-bootstrap'; // Import Modal và các thành phần khác từ React Bootstrap
 import { createRide } from '../api';
 import MapComponent from './Map';
+import Map from './Mapbox';
 import mapboxgl from 'mapbox-gl';
 import Select from 'react-select';
 
@@ -16,6 +17,9 @@ function CreateRide({account, handleTabChange} ) {
   const [startPoint, setStartPoint] = useState('');
   const [startPointOptions, setStartPointOptions] = useState([]);
   const [endPointOptions, setEndPointOptions] = useState([]);
+  //lưu toạ độ của các điểm đầu và cuối để truyền vào map tính toán khoảng cách và đường đi
+  const [startPointCoordinates, setStartPointCoordinates] = useState(null);
+  const [endPointCoordinates, setEndPointCoordinates] = useState(null);
   const [endPoint, setEndPoint] = useState('');
   const [fare, setFare] = useState(0);
   const [startTime, setStartTime] = useState('');
@@ -67,13 +71,13 @@ function CreateRide({account, handleTabChange} ) {
         <div className="col-md-6">
             <label>From:</label>
             {/* <input type="text" className="form-control" required value={startPoint} onChange={(e) => setStartPoint(e.target.value)} />  */}
-            <SearchLocation setStartPoint={setStartPoint} />
+            <SearchLocation setStartPoint={setStartPoint}  setStartPointCoordinates = {setStartPointCoordinates}/>
 
         </div>
         <div className="col-md-6">
             <label>To:</label>
             {/* <input type="text" className="form-control" required value={endPoint} onChange={(e) => setEndPoint(e.target.value)} /> */}
-            <SearchLocation setEndPoint={setEndPoint} />
+            <SearchLocation setEndPoint={setEndPoint}  setEndPointCoordinates = {setEndPointCoordinates}/>
         </div>
         </div>
         <div className="row">
@@ -93,7 +97,7 @@ function CreateRide({account, handleTabChange} ) {
         </div>
         </div>
         <button className="btn btn-primary mt-3" onClick={handleCreateRide}>Create Ride</button>
-        {/* <SearchLocation/> */}
+        <Map setEndPoint={setEndPoint}  setStartPoint={setStartPoint}  startPointCoordinates={startPointCoordinates} endPointCoordinates={endPointCoordinates}/>
         <Modal show={showSuccessModal} onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>Ride Created Successfully</Modal.Title>

@@ -5,7 +5,7 @@ import mapboxgl from 'mapbox-gl';
 // Thay thế 'your-access-token' bằng access token của bạn
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGF0dG0wMyIsImEiOiJjbHZ3aWs2dmIwZG1pMnFvZ2JzczBxYTZwIn0.f8D93mAehFFbbIhmaH83pA';
 
-function SearchLocation({ setStartPoint, setEndPoint }) {
+function SearchLocation({ setStartPoint, setEndPoint ,setStartPointCoordinates,  setEndPointCoordinates }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestedLocations, setSuggestedLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -33,9 +33,13 @@ function SearchLocation({ setStartPoint, setEndPoint }) {
       setSelectedLocation(selectedOption);
       if (setStartPoint) {
         setStartPoint(selectedOption.value);
+        setStartPointCoordinates(selectedOption.coordinates);
+        console.log(selectedOption.coordinates);
       }
       if (setEndPoint) {
         setEndPoint(selectedOption.value);
+        setEndPointCoordinates(selectedOption.coordinates);
+        console.log(selectedOption.coordinates);
       }
     } else {
       setSelectedLocation(null);
