@@ -3,14 +3,14 @@ import RideContract from '../contracts/RideContract.json';
 import Web3 from 'web3';
 import { Modal, Button } from 'react-bootstrap'; // Import Modal và các thành phần khác từ React Bootstrap
 import { createRide } from '../api';
-import MapComponent from './Map';
+
 import Map from './Mapbox';
-import mapboxgl from 'mapbox-gl';
+
 import Select from 'react-select';
 
 import SearchLocation from './SearchLocation';
 // Thay thế 'your-access-token' bằng access token của bạn
-mapboxgl.accessToken = 'pk.eyJ1IjoiZGF0dG0wMyIsImEiOiJjbHZ3aWs2dmIwZG1pMnFvZ2JzczBxYTZwIn0.f8D93mAehFFbbIhmaH83pA';
+
 
 
 function CreateRide({account, handleTabChange} ) {

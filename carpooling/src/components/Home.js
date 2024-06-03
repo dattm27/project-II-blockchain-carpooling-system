@@ -6,6 +6,7 @@ import JoinRide from './JoinRide';
 import ProcessRide from './ProcessRide';
 import RideHistory from './History';
 import Balance from './Balance';
+import CurrentLocationMap from './Map';
 function Home({walletAddress})  {
     //properties
     const [activeTab, setActiveTab] = useState('home');
@@ -49,6 +50,9 @@ function Home({walletAddress})  {
                       <Nav.Item>
                         <Nav.Link eventKey="balance">Account</Nav.Link>
                       </Nav.Item>
+                      <Nav.Item>
+                        <Nav.Link eventKey="map">Map</Nav.Link>
+                      </Nav.Item>
                     </Nav>
                   </Navbar.Collapse>
                 </Container>
@@ -79,6 +83,11 @@ function Home({walletAddress})  {
               {activeTab === 'balance' && (
                 <div>
                  <Balance account={ walletAddress}/>
+                </div>
+              )}
+              {activeTab === 'map' && (
+                <div >
+                <CurrentLocationMap/>
                 </div>
               )}
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getPendingPassengers, acceptPassenger, getPassenger, completeRide, getRideDetails, declinePassenger, getEventListener } from '../api';
 import { Table, Button } from 'react-bootstrap';
+import Map from './Mapbox';
 
 const ProcessRide = ({account, rideId , handleTabChange}) => {
   const [pendingPassengers, setPendingPassengers] = useState([]);
@@ -155,7 +156,9 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
             </tbody>
           </Table>
         </>
+       
       )}
+       <Map/>
     </div>
 
   );
