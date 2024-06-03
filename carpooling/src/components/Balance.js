@@ -16,16 +16,15 @@ const Balance = ({ account }) => {
                 const formattedBalanceHistory = balanceChangeHistory.map(balanceChange => ({
                     user: balanceChange[0],
                     amount: balanceChange[1],
-                    balanceBefore: balanceChange[2],
-                    balanceAfter: balanceChange[3],
-                    timestamp: balanceChange[4],
-                    description: balanceChange[5]
+      
+                    timestamp: balanceChange[2],
+                    description: balanceChange[3]
                 }));
                 
                 // Cập nhật state để hiển thị lịch sử biến động số dư trên giao diện người dùng
                 setBalanceChangeHistory(formattedBalanceHistory);
                 
-               // console.log(history);
+                console.log(formattedBalanceHistory);
             } catch (error) {
                 console.error("Error fetching balance history:", error);
                 // Xử lý lỗi (hiển thị thông báo lỗi, etc.) nếu cần

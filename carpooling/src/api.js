@@ -17,11 +17,17 @@ const contract =new web3.eth.Contract(
 console.log('contract address',deployedNetwork.address);
 
 
-export const createRide = async(startPoint, endPoint, fare, startTimeUnix, numOfSeats, account) =>{
+export const createRide = async(startPoint, endPoint, fare, startTimeUnix, numOfSeats, account, startLongitude, startLatitude, endLongitude, endLatitude) =>{
   try {
     const currentBalance = await getCurrentBalance(currentAccount);
     console.log(currentBalance);
-    await contract.methods.createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats, currentBalance).send({ from: account});
+    //xử lý toạ đọ vì lưu smart contract kiểu int
+    const startLongitudeInt = Math.floor(startLongitude * 1e10);
+    const startLatitudeInt = Math.floor(startLatitude * 1e10);
+    const endLongitudeInt = Math.floor(endLongitude * 1e10);
+    const endLatitudeInt = Math.floor(endLatitude * 1e10);
+
+    await contract.methods.createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats, startLongitudeInt, startLatitudeInt, endLongitudeInt, endLatitudeInt).send({ from: account});
   }
   catch (error){
     console.log("error when creating ride" + error.message);

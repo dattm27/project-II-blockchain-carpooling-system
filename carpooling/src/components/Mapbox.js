@@ -6,7 +6,7 @@ import MapboxClient from '@mapbox/mapbox-sdk/services/directions';
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGF0dG0wMyIsImEiOiJjbHZ3aWs2dmIwZG1pMnFvZ2JzczBxYTZwIn0.f8D93mAehFFbbIhmaH83pA';
 const directionsClient = MapboxClient({ accessToken: mapboxgl.accessToken });
 
-function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEndPoint }) {
+function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEndPoint, screen }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestedLocations, setSuggestedLocations] = useState([]);
   const [selectedStartLocation, setSelectedStartLocation] = useState(null);
@@ -27,6 +27,7 @@ function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEnd
 
   useEffect (()=>{
     getCurrentLocation();
+    if (startPointCoordinates &&  endPointCoordinates) calculateDistance();
   }, [map])
 
   useEffect(() => {
@@ -120,7 +121,8 @@ function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEnd
   const calculateDistance = async () => {
     const startCoordinates = startPointCoordinates;
     const endCoordinates = endPointCoordinates;
-
+    console.log(startCoordinates);
+    console.log(endCoordinates);
     try {
       const response = await directionsClient.getDirections({
         profile: 'driving',
@@ -135,7 +137,7 @@ function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEnd
       const calculatedDistance = route.distance / 1000; // Đổi đơn vị từ mét sang kilômét
       setDistance(`${calculatedDistance.toFixed(2)} km`);
       const fuelPriceForDistance = calculatedDistance * 0.1; // Giá nhiên liệu tham khảo (0.1 ETH/km)
-      
+
       setFuelPrice(`${fuelPriceForDistance.toFixed(2)} ETH`);
       if (map) {
         if (routeLayer) {
@@ -167,7 +169,15 @@ function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEnd
           }
         });
         setRouteLayer('route');
-        map.flyTo({ center: startCoordinates, zoom: 12 });
+        //map.flyTo({ center: startCoordinates, zoom: 8  });
+        // Tạo một mảng các điểm trên quãng đường để tính toán bounds
+        const coordinates = route.geometry.coordinates;
+        const bounds = coordinates.reduce((bounds, coord) => bounds.extend(coord), new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]));
+
+        // Thiết lập zoom và vị trí để hiển thị quãng đường trên bản đồ
+        map.fitBounds(bounds, {
+          padding: 30 // Khoảng cách padding từ biên của bản đồ
+        });
       }
     } catch (error) {
       console.error('Error calculating distance:', error);
@@ -176,8 +186,14 @@ function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEnd
 
   return (
     <div>
-      {distance && <p>Distance: {distance}</p>}
-      {fuelPrice && <p>Fuel Price (Estimated): {fuelPrice}</p>}
+     
+     {screen === "create" && (
+        <>
+          {distance && <p>Distance: {distance}</p>}
+          {fuelPrice && <p>Fuel Price (Estimated): {fuelPrice}</p>}
+        </>
+      )}
+      
       <div id="map" style={{ width: '100%', height: '400px' }}></div>
     </div>
   );

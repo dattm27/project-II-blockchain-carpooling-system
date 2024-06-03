@@ -55,7 +55,7 @@ function CreateRide({account, handleTabChange} ) {
       // Convert the start date and time to Unix timestamp
       const startTimeUnix = Math.floor(new Date(startTime).getTime() / 1000);
 
-      await createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats, account);
+      await createRide(startPoint, endPoint, fare, startTimeUnix, numOfSeats, account, startPointCoordinates[0], startPointCoordinates[1], endPointCoordinates[0], endPointCoordinates[1]);
       setShowSuccessModal(true); // Hiển thị modal thông báo thành công
      
     } catch (error) {
@@ -97,7 +97,7 @@ function CreateRide({account, handleTabChange} ) {
         </div>
         </div>
         <button className="btn btn-primary mt-3" onClick={handleCreateRide}>Create Ride</button>
-        <Map setEndPoint={setEndPoint}  setStartPoint={setStartPoint}  startPointCoordinates={startPointCoordinates} endPointCoordinates={endPointCoordinates}/>
+        <Map setEndPoint={setEndPoint}  setStartPoint={setStartPoint}  startPointCoordinates={startPointCoordinates} endPointCoordinates={endPointCoordinates} screen ="create" />
         <Modal show={showSuccessModal} onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>Ride Created Successfully</Modal.Title>

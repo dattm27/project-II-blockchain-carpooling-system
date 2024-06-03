@@ -7,13 +7,24 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
   const [pendingPassengers, setPendingPassengers] = useState([]);
   const [acceptedPassengers, setAcceptedPassengers] = useState([]);
   const [rideStatus, setRideStatus] = useState(null);
+  //cặp toạ độ điểm đầu và kết thúc để truyền vào map 
+  const [startPointCoordinates, setStartPointCoordinates] = useState(null);
+  const [endPointCoordinates, setEndPointCoordinates] = useState(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const pending = await getPendingPassengers(rideId);
         const accepted = await getPassenger(rideId);
         const ride  = await getRideDetails(rideId);
-        // console.log(ride);
+        const startLongitude= Number(ride.startLongitude)/10000000000;
+        const startLatitude = Number(ride.startLatitude)/10000000000;
+        const endLongitude = Number(ride.endLongitude)/10000000000;
+        const endLatitude = Number(ride.endLatitude)/10000000000;
+        // đặt thành cặp toạ độ điểm đầu và cuối truyền vào map
+        setStartPointCoordinates([  startLongitude,  startLatitude ]);
+        setEndPointCoordinates([  endLongitude,  endLatitude ]);
+        console.log(startLongitude, ' ', startLatitude );
+        console.log(endLongitude,' ', endLatitude);
         setPendingPassengers(pending);
         setAcceptedPassengers(accepted);
         setRideStatus(ride.isActive.toString());
@@ -158,7 +169,9 @@ const ProcessRide = ({account, rideId , handleTabChange}) => {
         </>
        
       )}
-       <Map/>
+        {startPointCoordinates && endPointCoordinates && (
+        <Map startPointCoordinates={startPointCoordinates} endPointCoordinates={endPointCoordinates} />
+      )}
     </div>
 
   );

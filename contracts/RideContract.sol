@@ -16,6 +16,11 @@ contract RideContract {
         uint numOfPassengers; 
         address payable[] passengers;
         bool isActive;
+        //toạ độ cho các điểm đầu cuối 
+        int256 startLongitude;
+        int256 startLatitude;
+        int256 endLongitude;
+        int256 endLatitude;
     }
   
     //cấu trúc thông tin khách hàng
@@ -33,8 +38,7 @@ contract RideContract {
     struct BalanceChange {
         address user;           // Người dùng ảnh hưởng
         int256 amount;          // Số dư thay đổi (có thể là dương hoặc âm)
-        int256 balanceBefore;   // Số dư trước khi thay đổi
-        int256 balanceAfter;    // Số dư sau khi thay đổi
+  
         uint256 timestamp;      // Thời gian xảy ra sự thay đổi
         string description;     // Mô tả ngắn về sự thay đổi
     }
@@ -50,9 +54,7 @@ contract RideContract {
     // Mapping từng địa chỉ tài khoản đến lịch sử các sự thay đổi số dư
     mapping(address => uint[]) public balanceChangeHistory;
     mapping (uint => BalanceChange) public balanceChanges;
-    // Mapping từng địa chỉ tài khoản đến số dư
-    
-    mapping(address => int256) public balances;
+   
 
 
     event RideCreated(uint indexed rideId, address indexed driver, string startPoint, string endPoint, uint256 fare, uint256 startTime, uint numOfSeats);
@@ -106,7 +108,7 @@ contract RideContract {
     // }
 
     // Đầu tiên, driver tạo chuyến đi mới
-    function createRide(string calldata _startPoint, string calldata _endPoint, uint256 _fare, uint256 _startTime, uint _numOfSeats, int256 balance) external {
+    function createRide(string calldata _startPoint, string calldata _endPoint, uint256 _fare, uint256 _startTime, uint _numOfSeats, int256 _startLongitude, int256 _startLatitude, int256  _endLongitude, int256 _endLatitude) external {
         require(_fare > 0, "Fare must be greater than zero");
         rideCount++; // Tăng số lượng chuyến xe
 
@@ -122,6 +124,10 @@ contract RideContract {
         newRide.numOfSeats = _numOfSeats; 
         newRide.passengers ;
         newRide.numOfPassengers = 0;
+        newRide.startLatitude = _startLatitude;
+        newRide.startLongitude = _startLongitude;
+        newRide.endLatitude = _endLatitude;
+        newRide.endLongitude = _endLongitude;
         // Lưu trữ chuyến xe vào mapping
         rides[rideCount] = newRide;
         // Thêm chuyến xe vào danh sách chuyến đi đã tạo của tài xế
@@ -130,11 +136,10 @@ contract RideContract {
         numOfPendings[rideCount] = 0;
         emit RideCreated(newRide.id, msg.sender, newRide.startPoint, newRide.endPoint, newRide.fare, newRide.startTime, newRide.numOfSeats);
 
-        //thêm thông tin số dư vào
-        balances[msg.sender] = balance;
+       
     }
     // Hành khách tìm kiếm một chuyến xe -> join vào pending chờ tài xế chấp nhận (lúc join vào hành khách thanh toán luôn)
-    function joinPendingRide(uint _rideId, string memory _phoneNumber, uint256 _numberOfPeople, int256 balance) public payable{
+    function joinPendingRide(uint _rideId, string memory _phoneNumber, uint256 _numberOfPeople ) public payable{
         require(_rideId <= rideCount, "Invalid ride ID");
         require(msg.sender != rides[_rideId].driver, "Join Ride: This is driver address, the ride need a passenger join");
         //kiểm tra nếu còn đủ chỗ để thêm hành khách vào pending
@@ -150,8 +155,7 @@ contract RideContract {
         emit PassengerJoined(_rideId, msg.sender, _phoneNumber, _numberOfPeople,rides[_rideId].driver);
         addBalanceChange(msg.sender, -int256(msg.value), "Request for joining ride");
 
-          //thêm thông tin số dư vào
-        balances[msg.sender] = balance;
+      
     }
   
     //chấp nhận một hành khách vào chuyến -> chuyển từ pending lên danh sách passengers
@@ -412,8 +416,7 @@ contract RideContract {
 
     // Hàm để thêm lịch sử thay đổi số dư
     function addBalanceChange(address _user, int256 _amount, string memory _description) internal {
-        // Thêm số tiền đã thay đổi vào số dư của tài khoản
-        balances[_user] += _amount;
+
         
         balanceChangeCounter ++;
         // Ghi lại lịch sử thay đổi số dư
@@ -421,8 +424,6 @@ contract RideContract {
         balanceChanges[balanceChangeCounter] =  BalanceChange({
             user: _user,
             amount: _amount,
-            balanceBefore: balances[_user] - _amount,
-            balanceAfter: balances[_user],
             timestamp: block.timestamp,
             description: _description
            
