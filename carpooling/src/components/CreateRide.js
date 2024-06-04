@@ -97,7 +97,7 @@ function CreateRide({account, handleTabChange} ) {
         </div>
         </div>
         <button className="btn btn-primary mt-3" onClick={handleCreateRide}>Create Ride</button>
-        <Map setEndPoint={setEndPoint}  setStartPoint={setStartPoint}  startPointCoordinates={startPointCoordinates} endPointCoordinates={endPointCoordinates} screen ="create" />
+        <Map setEndPoint={setEndPoint}  setStartPoint={setStartPoint}  startPointCoordinates={startPointCoordinates} endPointCoordinates={endPointCoordinates} screen ="create" startTime={startTime} />
         <Modal show={showSuccessModal} onHide={handleClose}>
           <Modal.Header closeButton>
             <Modal.Title>Ride Created Successfully</Modal.Title>

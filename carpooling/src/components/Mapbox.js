@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import mapboxgl from 'mapbox-gl';
 import MapboxClient from '@mapbox/mapbox-sdk/services/directions';
-
+import {Badge } from 'react-bootstrap'; 
 // Thay thế 'your-access-token' bằng access token của bạn
 mapboxgl.accessToken = 'pk.eyJ1IjoiZGF0dG0wMyIsImEiOiJjbHZ3aWs2dmIwZG1pMnFvZ2JzczBxYTZwIn0.f8D93mAehFFbbIhmaH83pA';
 const directionsClient = MapboxClient({ accessToken: mapboxgl.accessToken });
 
-function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEndPoint, screen }) {
+function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEndPoint, screen, startTime  }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestedLocations, setSuggestedLocations] = useState([]);
   const [selectedStartLocation, setSelectedStartLocation] = useState(null);
@@ -16,6 +16,7 @@ function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEnd
   const [map, setMap] = useState(null);
   const [routeLayer, setRouteLayer] = useState(null);
   const [currentLocation, setCurrentLocation] = useState(null);
+  const [rushHour, setRushHour] = useState(0);
 
   //đảm bảo map được khởi tạo khi mở trang
   useEffect(() => {
@@ -42,6 +43,11 @@ function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEnd
     calculateDistance();
   }, [startPointCoordinates, endPointCoordinates]);
 
+  //theo doi su thay doi cua gio khoi hanh
+  useEffect(() => {
+    console.log('start time: ', startTime);
+    calculateDistance();
+  }, [startTime])
  
   //Khởi tạo bản đồ với vị trí mặc định
   const initializeMap = () => {
@@ -136,9 +142,20 @@ function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEnd
       const route = response.body.routes[0];
       const calculatedDistance = route.distance / 1000; // Đổi đơn vị từ mét sang kilômét
       setDistance(`${calculatedDistance.toFixed(2)} km`);
-      const fuelPriceForDistance = calculatedDistance * 0.1; // Giá nhiên liệu tham khảo (0.1 ETH/km)
-
+      //const fuelPriceForDistance = calculatedDistance * 0.1; // Giá nhiên liệu tham khảo (0.1 ETH/km)
+       
+      // Check if the start time is during peak hours
+      const startTimeDate = new Date(startTime);
+      const startHours = startTimeDate.getHours();
+      const isPeakHours = (startHours >= 7 && startHours <= 9) || (startHours >= 17 && startHours <= 19);
+      const baseFuelPricePerKm = 0.1;
+      const peakHourSurcharge = isPeakHours ? 0.05 : 0;
+      if (peakHourSurcharge) setRushHour(1);
+      else setRushHour(0);
+      const fuelPriceForDistance = calculatedDistance * (baseFuelPricePerKm + peakHourSurcharge); // Giá nhiên liệu tham khảo
+      
       setFuelPrice(`${fuelPriceForDistance.toFixed(2)} ETH`);
+
       if (map) {
         if (routeLayer) {
           map.removeLayer(routeLayer);
@@ -189,8 +206,11 @@ function Map({ startPointCoordinates, endPointCoordinates, setStartPoint, setEnd
      
      {screen === "create" && (
         <>
-          {distance && <p>Distance: {distance}</p>}
-          {fuelPrice && <p>Fuel Price (Estimated): {fuelPrice}</p>}
+          {distance && <span>Distance: {distance}</span>}
+        
+          {(rushHour != 0  && fuelPrice) && <div> <span>Fuel Price (Estimated): {fuelPrice} </span> <Badge pill bg="danger"> Rush Hour</Badge></div> }
+          {(rushHour == 0  && fuelPrice) && <div> <p>Fuel Price (Estimated): {fuelPrice}</p> </div> }
+          <br></br>
         </>
       )}
       

@@ -16,7 +16,6 @@ const Balance = ({ account }) => {
                 const formattedBalanceHistory = balanceChangeHistory.map(balanceChange => ({
                     user: balanceChange[0],
                     amount: balanceChange[1],
-      
                     timestamp: balanceChange[2],
                     description: balanceChange[3]
                 }));
